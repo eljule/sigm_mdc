@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
           <ThemeToggle />
 
           <a
-            href="/login"
+            href="/"
             className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:translate-y-0"
           >
             <UserLoginIcon className="w-4 h-4 text-emerald-100" />

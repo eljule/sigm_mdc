@@ -64,16 +64,29 @@ export const FALLBACK_MODULES: Module[] = [
  * Admite comunicación interna de red Docker (INTERNAL_API_URL=http://backend:4000)
  * o acceso de desarrollo local (NEXT_PUBLIC_API_URL=http://localhost:4000).
  * Si el backend está iniciando o no responde, utiliza un fallback seguro con los 4 módulos iniciales.
+ * Permite filtrar por códigos autorizados para el usuario activo.
  */
-export async function getActiveModules(): Promise<Module[]> {
+export async function getActiveModules(allowedCodes?: string[]): Promise<Module[]> {
   // En SSR dentro de Docker se prefiere INTERNAL_API_URL; en cliente o local NEXT_PUBLIC_API_URL
   const baseUrl =
-    process.env.INTERNAL_API_URL ||
+    (typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : process.env.INTERNAL_API_URL) ||
     process.env.NEXT_PUBLIC_API_URL ||
     'http://localhost:4000';
 
+  const filterModules = (list: Module[]): Module[] => {
+    if (allowedCodes === undefined) {
+      return list;
+    }
+    if (allowedCodes.length === 0) {
+      return [];
+    }
+    const set = new Set(allowedCodes.map((c) => c.toLowerCase()));
+    return list.filter((m) => set.has(m.code.toLowerCase()));
+  };
+
   try {
-    const res = await fetch(`${baseUrl}/api/v1/modules`, {
+    const query = allowedCodes && allowedCodes.length > 0 ? `?allowed=${encodeURIComponent(allowedCodes.join(','))}` : '';
+    const res = await fetch(`${baseUrl}/api/v1/modules${query}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -83,18 +96,18 @@ export async function getActiveModules(): Promise<Module[]> {
 
     if (!res.ok) {
       console.warn(`[ModulesService] Estado de respuesta ${res.status}. Usando fallback local.`);
-      return FALLBACK_MODULES;
+      return filterModules(FALLBACK_MODULES);
     }
 
     const responseJson: ApiResponse<Module[]> = await res.json();
     if (responseJson.success && Array.isArray(responseJson.data)) {
-      return responseJson.data;
+      return filterModules(responseJson.data);
     }
 
-    return FALLBACK_MODULES;
+    return filterModules(FALLBACK_MODULES);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.info(`[ModulesService] Backend no accesible (${msg}). Utilizando datos de contingencia.`);
-    return FALLBACK_MODULES;
+    return filterModules(FALLBACK_MODULES);
   }
 }

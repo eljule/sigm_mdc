@@ -11,9 +11,10 @@ import {
 
 interface ModuleCardProps {
   module: Module;
+  isReportante?: boolean;
 }
 
-export const ModuleCard: React.FC<ModuleCardProps> = ({ module }) => {
+export const ModuleCard: React.FC<ModuleCardProps> = ({ module, isReportante = false }) => {
   // Renderizar la ilustración SVG correspondiente según el código del módulo
   const renderIllustration = (): React.ReactElement => {
     switch (module.code) {
@@ -31,7 +32,11 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module }) => {
   };
 
   const isHelpdesk = module.code === 'helpdesk_support';
-  const primaryButtonLabel = isHelpdesk ? 'Ingresar al Panel' : 'Ingresar al Sistema';
+  const primaryButtonLabel = isHelpdesk
+    ? isReportante
+      ? 'Mis Tickets (Seguimiento)'
+      : 'Ingresar al Panel'
+    : 'Ingresar al Sistema';
 
   return (
     <article className="group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200/90 dark:border-slate-700/80 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between overflow-hidden">

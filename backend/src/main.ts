@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+import { SanitizeBodyInterceptor } from './common/interceptors/sanitize-body.interceptor';
+
 async function bootstrap() {
   const logger = new Logger('SIGM-Bootstrap');
   const app = await NestFactory.create(AppModule);
@@ -18,6 +20,9 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  // Interceptor global para sanitización de cadenas (trim y limpieza de espacios)
+  app.useGlobalInterceptors(new SanitizeBodyInterceptor());
 
   // Validación global estricta
   app.useGlobalPipes(

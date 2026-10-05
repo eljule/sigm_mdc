@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { GetActiveModulesUseCase } from '../../application/use-cases/get-active-modules.use-case';
 import { ModuleResponseDto } from '../../application/dtos/module-response.dto';
 import { ApiResponseDto } from '../../../../common/dto/api-response.dto';
@@ -13,8 +13,16 @@ export class ModuleController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getActiveModules(): Promise<ApiResponseDto<ModuleResponseDto[]>> {
-    const modules = await this.getActiveModulesUseCase.execute();
+  async getActiveModules(
+    @Query('allowed') allowed?: string,
+  ): Promise<ApiResponseDto<ModuleResponseDto[]>> {
+    let modules = await this.getActiveModulesUseCase.execute();
+
+    if (allowed && allowed.trim().length > 0) {
+      const allowedList = allowed.split(',').map((c) => c.trim().toLowerCase());
+      modules = modules.filter((m) => allowedList.includes(m.code.toLowerCase()));
+    }
+
     return ApiResponseDto.ok(
       modules,
       'Módulos del lanzador recuperados exitosamente',
