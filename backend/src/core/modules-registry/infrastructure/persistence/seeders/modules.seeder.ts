@@ -25,7 +25,7 @@ export const INITIAL_MODULES: InitialModuleData[] = [
     code: 'central_dashboard',
     name: 'Dashboard Central y Configuración',
     description: 'Núcleo y launcher del SIGM con accesos consolidados, métricas generales y administración de parámetros.',
-    iconUrl: 'icons/dashboard.svg',
+    iconUrl: '🏢',
     route: '/admin',
     accentColor: '#16a34a', // Verde institucional
     order: 1,
@@ -37,7 +37,7 @@ export const INITIAL_MODULES: InitialModuleData[] = [
     code: 'transport_licenses',
     name: 'Licencias de Transportes',
     description: 'Empadronamiento de vehículos menores, licencias de conducir y registro de mototaxis del distrito.',
-    iconUrl: 'icons/transport.svg',
+    iconUrl: '🚗',
     route: '/transportes',
     accentColor: '#ea580c', // Naranja
     order: 2,
@@ -49,7 +49,7 @@ export const INITIAL_MODULES: InitialModuleData[] = [
     code: 'it_inventory',
     name: 'Inventario y Gestión TI',
     description: 'Gestión de activos de hardware y software (ITAM), asignación por dependencias y control de garantías.',
-    iconUrl: 'icons/inventory.svg',
+    iconUrl: '💻',
     route: '/itam',
     accentColor: '#2563eb', // Azul
     order: 3,
@@ -61,7 +61,7 @@ export const INITIAL_MODULES: InitialModuleData[] = [
     code: 'helpdesk_support',
     name: 'Soporte Técnico y Helpdesk',
     description: 'Mesa de partes y resolución de incidencias informáticas, seguimiento de tickets y atención a usuarios.',
-    iconUrl: 'icons/helpdesk.svg',
+    iconUrl: '🎧',
     route: '/soporte',
     accentColor: '#7c3aed', // Morado
     order: 4,

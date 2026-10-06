@@ -7,7 +7,7 @@ export interface SecondaryAction {
 }
 
 export interface ModuleProps {
-  id: string;
+  id?: string;
   code: string;
   name: string;
   description: string;
@@ -18,6 +18,9 @@ export interface ModuleProps {
   isActive: boolean;
   requiresAuth: boolean;
   secondaryAction?: SecondaryAction | null;
+  isUnderMaintenance?: boolean;
+  maintenanceMessage?: string | null;
+  estimatedRecoveryTime?: string | null;
 }
 
 /**
@@ -25,7 +28,7 @@ export interface ModuleProps {
  * Totalmente libre de dependencias de TypeORM o NestJS.
  */
 export class Module {
-  private readonly _id: string;
+  private readonly _id?: string;
   private readonly _code: string;
   private _name: string;
   private _description: string;
@@ -36,6 +39,9 @@ export class Module {
   private _isActive: boolean;
   private _requiresAuth: boolean;
   private _secondaryAction: SecondaryAction | null;
+  private _isUnderMaintenance: boolean;
+  private _maintenanceMessage: string | null;
+  private _estimatedRecoveryTime: string | null;
 
   constructor(props: ModuleProps) {
     this._id = props.id;
@@ -49,9 +55,12 @@ export class Module {
     this._isActive = props.isActive;
     this._requiresAuth = props.requiresAuth;
     this._secondaryAction = props.secondaryAction ?? null;
+    this._isUnderMaintenance = props.isUnderMaintenance ?? false;
+    this._maintenanceMessage = props.maintenanceMessage ?? null;
+    this._estimatedRecoveryTime = props.estimatedRecoveryTime ?? null;
   }
 
-  get id(): string {
+  get id(): string | undefined {
     return this._id;
   }
 
@@ -95,12 +104,51 @@ export class Module {
     return this._secondaryAction;
   }
 
+  get isUnderMaintenance(): boolean {
+    return this._isUnderMaintenance;
+  }
+
+  get maintenanceMessage(): string | null {
+    return this._maintenanceMessage;
+  }
+
+  get estimatedRecoveryTime(): string | null {
+    return this._estimatedRecoveryTime;
+  }
+
   activate(): void {
     this._isActive = true;
   }
 
   deactivate(): void {
     this._isActive = false;
+  }
+
+  setMaintenance(
+    isUnderMaintenance: boolean,
+    message?: string | null,
+    estimatedRecoveryTime?: string | null,
+  ): void {
+    this._isUnderMaintenance = isUnderMaintenance;
+    this._maintenanceMessage = message !== undefined ? message : this._maintenanceMessage;
+    this._estimatedRecoveryTime =
+      estimatedRecoveryTime !== undefined ? estimatedRecoveryTime : this._estimatedRecoveryTime;
+  }
+
+  updateDetails(props: Partial<Omit<ModuleProps, 'id' | 'code'>>): void {
+    if (props.name !== undefined) this._name = props.name;
+    if (props.description !== undefined) this._description = props.description;
+    if (props.iconUrl !== undefined) this._iconUrl = props.iconUrl;
+    if (props.route !== undefined) this._route = props.route;
+    if (props.accentColor !== undefined) this._accentColor = props.accentColor;
+    if (props.order !== undefined) this._order = props.order;
+    if (props.isActive !== undefined) this._isActive = props.isActive;
+    if (props.requiresAuth !== undefined) this._requiresAuth = props.requiresAuth;
+    if (props.secondaryAction !== undefined) this._secondaryAction = props.secondaryAction;
+    if (props.isUnderMaintenance !== undefined) this._isUnderMaintenance = props.isUnderMaintenance;
+    if (props.maintenanceMessage !== undefined) this._maintenanceMessage = props.maintenanceMessage;
+    if (props.estimatedRecoveryTime !== undefined)
+      this._estimatedRecoveryTime = props.estimatedRecoveryTime;
   }
 
   toObject(): ModuleProps {
@@ -116,6 +164,9 @@ export class Module {
       isActive: this._isActive,
       requiresAuth: this._requiresAuth,
       secondaryAction: this._secondaryAction,
+      isUnderMaintenance: this._isUnderMaintenance,
+      maintenanceMessage: this._maintenanceMessage,
+      estimatedRecoveryTime: this._estimatedRecoveryTime,
     };
   }
 }

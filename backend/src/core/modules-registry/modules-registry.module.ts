@@ -4,6 +4,7 @@ import { ModuleEntity } from './infrastructure/persistence/entities/module.entit
 import { ModuleRepositoryPort } from './domain/ports/module.repository.port';
 import { TypeOrmModuleRepository } from './infrastructure/adapters/typeorm-module.repository';
 import { GetActiveModulesUseCase } from './application/use-cases/get-active-modules.use-case';
+import { ManageModulesUseCase } from './application/use-cases/manage-modules.use-case';
 import { ModuleController } from './infrastructure/controllers/module.controller';
 import { ModulesSeederService } from './infrastructure/persistence/seeders/modules.seeder';
 
@@ -11,8 +12,9 @@ import { ModulesSeederService } from './infrastructure/persistence/seeders/modul
   imports: [TypeOrmModule.forFeature([ModuleEntity])],
   controllers: [ModuleController],
   providers: [
-    // Caso de uso en capa Application
+    // Casos de uso en capa Application
     GetActiveModulesUseCase,
+    ManageModulesUseCase,
     // Vinculación de Puerto y Adaptador en Arquitectura Hexagonal
     {
       provide: ModuleRepositoryPort,
@@ -21,6 +23,6 @@ import { ModulesSeederService } from './infrastructure/persistence/seeders/modul
     // Servicio de sembrado inicial
     ModulesSeederService,
   ],
-  exports: [ModuleRepositoryPort, GetActiveModulesUseCase],
+  exports: [ModuleRepositoryPort, GetActiveModulesUseCase, ManageModulesUseCase],
 })
 export class ModulesRegistryModule {}

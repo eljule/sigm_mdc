@@ -12,10 +12,13 @@ export class ModuleResponseDto {
   isActive!: boolean;
   requiresAuth!: boolean;
   secondaryAction!: SecondaryAction | null;
+  isUnderMaintenance!: boolean;
+  maintenanceMessage!: string | null;
+  estimatedRecoveryTime!: string | null;
 
   static fromDomain(entity: Module): ModuleResponseDto {
     const dto = new ModuleResponseDto();
-    dto.id = entity.id;
+    dto.id = entity.id || '';
     dto.code = entity.code;
     dto.name = entity.name;
     dto.description = entity.description;
@@ -26,6 +29,9 @@ export class ModuleResponseDto {
     dto.isActive = entity.isActive;
     dto.requiresAuth = entity.requiresAuth;
     dto.secondaryAction = entity.secondaryAction;
+    dto.isUnderMaintenance = entity.isUnderMaintenance;
+    dto.maintenanceMessage = entity.maintenanceMessage;
+    dto.estimatedRecoveryTime = entity.estimatedRecoveryTime;
     return dto;
   }
 }

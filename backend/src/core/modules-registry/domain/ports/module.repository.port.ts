@@ -6,9 +6,19 @@ import { Module } from '../entities/module.entity';
  */
 export abstract class ModuleRepositoryPort {
   /**
+   * Obtiene todos los módulos registrados en el sistema, ordenados por prioridad ascendente.
+   */
+  abstract findAll(): Promise<Module[]>;
+
+  /**
    * Obtiene todos los módulos activos ordenados por prioridad/orden ascendente.
    */
   abstract findAllActive(): Promise<Module[]>;
+
+  /**
+   * Busca un módulo por su ID único.
+   */
+  abstract findById(id: string): Promise<Module | null>;
 
   /**
    * Busca un módulo por su código único de identificación.
@@ -29,4 +39,9 @@ export abstract class ModuleRepositoryPort {
    * Cuenta la cantidad total de módulos registrados.
    */
   abstract count(): Promise<number>;
+
+  /**
+   * Elimina un módulo por su ID.
+   */
+  abstract delete(id: string): Promise<void>;
 }

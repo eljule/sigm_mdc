@@ -19,6 +19,7 @@ import {
 import { UserSummary } from '../../src/types/auth';
 import { authService } from '../../src/services/auth.service';
 import { canAccessModule } from '../../src/utils/auth-guard';
+import { getModuleByIdOrCode } from '../../src/services/modules.service';
 import { itamService } from '../../src/services/itam.service';
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import { AssetFormModal } from '../../src/components/itam/AssetFormModal';
@@ -34,6 +35,7 @@ import { LoanModal } from '../../src/components/itam/LoanModal';
 import { AuditModal } from '../../src/components/itam/AuditModal';
 import { SoftwareModal } from '../../src/components/itam/SoftwareModal';
 import { ActaDocumentModal, ActaType } from '../../src/components/itam/ActaDocumentModal';
+import { Pagination } from '../../src/components/Pagination';
 
 type ItamTab =
   | 'inventory'
@@ -54,6 +56,16 @@ export default function ItamPage() {
   const [activeTab, setActiveTab] = useState<ItamTab>('inventory');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estados de paginación para ITAM
+  const [assetsPage, setAssetsPage] = useState<number>(1);
+  const [assetsPageSize, setAssetsPageSize] = useState<number>(10);
+  const [movementsPage, setMovementsPage] = useState<number>(1);
+  const [movementsPageSize, setMovementsPageSize] = useState<number>(10);
+  const [maintenancePage, setMaintenancePage] = useState<number>(1);
+  const [maintenancePageSize, setMaintenancePageSize] = useState<number>(10);
+  const [loansPage, setLoansPage] = useState<number>(1);
+  const [loansPageSize, setLoansPageSize] = useState<number>(10);
 
   // Alerta flotante
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -140,25 +152,44 @@ export default function ItamPage() {
 
   // 1. Verificación de sesión y autorización para ITAM
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (!user) {
-      router.replace('/login');
-      return;
-    }
-
-    if (!canAccessModule(user, 'it_inventory')) {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(
-          'sigm_access_denied_message',
-          'Acceso no autorizado: Su usuario no cuenta con permisos para el subsistema de Gestión de Activos TI (ITAM). Ha sido redirigido a sus módulos asignados.',
-        );
+    const checkAccessAndMaintenance = async () => {
+      const user = authService.getCurrentUser();
+      if (!user) {
+        router.replace('/login');
+        return;
       }
-      router.replace('/modulos');
-      return;
-    }
 
-    setCurrentUser(user);
-    loadAllData();
+      if (!canAccessModule(user, 'it_inventory')) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            'sigm_access_denied_message',
+            'Acceso no autorizado: Su usuario no cuenta con permisos para el subsistema de Gestión de Activos TI (ITAM). Ha sido redirigido a sus módulos asignados.',
+          );
+        }
+        router.replace('/modulos');
+        return;
+      }
+
+      // Verificación de mantenimiento (excluye ROOT y Administrador Central)
+      const isSuperAdmin =
+        user.username?.toUpperCase() === 'ROOT' ||
+        user.role?.toLowerCase() === 'administrador central';
+
+      try {
+        const mod = await getModuleByIdOrCode('it_inventory');
+        if (mod?.isUnderMaintenance && !isSuperAdmin) {
+          router.replace('/mantenimiento?code=it_inventory');
+          return;
+        }
+      } catch (e) {
+        console.warn('Error al verificar mantenimiento:', e);
+      }
+
+      setCurrentUser(user);
+      loadAllData();
+    };
+
+    checkAccessAndMaintenance();
   }, [router]);
 
   const loadAllData = async () => {
@@ -355,6 +386,27 @@ export default function ItamPage() {
   }
 
   const filteredAssets = assets;
+
+  // Paginación calculada
+  const paginatedAssets = React.useMemo(() => {
+    const start = (assetsPage - 1) * assetsPageSize;
+    return filteredAssets.slice(start, start + assetsPageSize);
+  }, [filteredAssets, assetsPage, assetsPageSize]);
+
+  const paginatedMovements = React.useMemo(() => {
+    const start = (movementsPage - 1) * movementsPageSize;
+    return movements.slice(start, start + movementsPageSize);
+  }, [movements, movementsPage, movementsPageSize]);
+
+  const paginatedMaintenance = React.useMemo(() => {
+    const start = (maintenancePage - 1) * maintenancePageSize;
+    return maintenanceOrders.slice(start, start + maintenancePageSize);
+  }, [maintenanceOrders, maintenancePage, maintenancePageSize]);
+
+  const paginatedLoans = React.useMemo(() => {
+    const start = (loansPage - 1) * loansPageSize;
+    return loans.slice(start, start + loansPageSize);
+  }, [loans, loansPage, loansPageSize]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
@@ -940,7 +992,7 @@ export default function ItamPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                      {filteredAssets.length === 0 ? (
+                      {paginatedAssets.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center text-slate-400">
                             <span className="text-3xl block mb-2">🔍</span>
@@ -948,7 +1000,7 @@ export default function ItamPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredAssets.map((asset) => {
+                        paginatedAssets.map((asset) => {
                           const cat = categories.find((c) => c.id === asset.categoryId);
                           const childCount = asset.childAssets?.length || 0;
                           return (
@@ -1124,6 +1176,14 @@ export default function ItamPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={assetsPage}
+                  totalItems={filteredAssets.length}
+                  pageSize={assetsPageSize}
+                  onPageChange={setAssetsPage}
+                  onPageSizeChange={setAssetsPageSize}
+                  itemLabel="activos TI"
+                />
               </div>
             </div>
           )}
@@ -1179,7 +1239,7 @@ export default function ItamPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                      {movements.length === 0 ? (
+                      {paginatedMovements.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-slate-400">
                             <span className="text-3xl block mb-2">🔄</span>
@@ -1187,17 +1247,17 @@ export default function ItamPage() {
                           </td>
                         </tr>
                       ) : (
-                        movements.map((mov) => (
+                        paginatedMovements.map((mov) => (
                           <tr key={mov.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="py-3 px-4 font-mono font-bold text-blue-600 dark:text-blue-400">
                               {mov.actaNumber}
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-bold text-slate-900 dark:text-white block">
-                                {mov.computerCode}
+                                {mov.asset?.computerCode || mov.asset?.patrimonialCode || mov.assetId}
                               </span>
                               <span className="text-[10px] text-slate-400">
-                                {mov.brandName} {mov.modelName}
+                                {mov.asset?.brandName || ''} {mov.asset?.modelName || ''}
                               </span>
                             </td>
                             <td className="py-3 px-4">
@@ -1236,6 +1296,14 @@ export default function ItamPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={movementsPage}
+                  totalItems={movements.length}
+                  pageSize={movementsPageSize}
+                  onPageChange={setMovementsPage}
+                  onPageSizeChange={setMovementsPageSize}
+                  itemLabel="movimientos"
+                />
               </div>
             </div>
           )}
@@ -1288,7 +1356,7 @@ export default function ItamPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                      {maintenanceOrders.length === 0 ? (
+                      {paginatedMaintenance.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-slate-400">
                             <span className="text-3xl block mb-2">🛠️</span>
@@ -1296,17 +1364,17 @@ export default function ItamPage() {
                           </td>
                         </tr>
                       ) : (
-                        maintenanceOrders.map((ord) => (
+                        paginatedMaintenance.map((ord) => (
                           <tr key={ord.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="py-3 px-4 font-mono font-bold text-amber-600 dark:text-amber-400">
                               {ord.orderNumber}
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-bold text-slate-900 dark:text-white block">
-                                {ord.computerCode}
+                                {ord.asset?.computerCode || ord.asset?.patrimonialCode || ord.assetId}
                               </span>
                               <span className="text-[10px] text-slate-400">
-                                {ord.brandName} {ord.modelName}
+                                {ord.asset?.brandName || ''} {ord.asset?.modelName || ''}
                               </span>
                             </td>
                             <td className="py-3 px-4">
@@ -1370,6 +1438,14 @@ export default function ItamPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={maintenancePage}
+                  totalItems={maintenanceOrders.length}
+                  pageSize={maintenancePageSize}
+                  onPageChange={setMaintenancePage}
+                  onPageSizeChange={setMaintenancePageSize}
+                  itemLabel="órdenes de mantenimiento"
+                />
               </div>
             </div>
           )}
@@ -1550,7 +1626,7 @@ export default function ItamPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                      {loans.length === 0 ? (
+                      {paginatedLoans.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center text-slate-400">
                             <span className="text-3xl block mb-2">⏱️</span>
@@ -1558,7 +1634,7 @@ export default function ItamPage() {
                           </td>
                         </tr>
                       ) : (
-                        loans.map((ln) => {
+                        paginatedLoans.map((ln) => {
                           const isDelayed =
                             ln.status === 'ACTIVO' &&
                             new Date(ln.estimatedEndDate) < new Date();
@@ -1579,7 +1655,7 @@ export default function ItamPage() {
                                 <div className="space-y-1">
                                   {ln.items?.map((it) => (
                                     <span key={it.id} className="inline-block text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono mr-1">
-                                      {it.computerCode} ({it.categoryName || 'Equipo'})
+                                      {it.asset?.computerCode || it.assetId} ({it.asset?.categoryName || 'Equipo'})
                                     </span>
                                   ))}
                                 </div>
@@ -1633,6 +1709,14 @@ export default function ItamPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={loansPage}
+                  totalItems={loans.length}
+                  pageSize={loansPageSize}
+                  onPageChange={setLoansPage}
+                  onPageSizeChange={setLoansPageSize}
+                  itemLabel="préstamos"
+                />
               </div>
             </div>
           )}

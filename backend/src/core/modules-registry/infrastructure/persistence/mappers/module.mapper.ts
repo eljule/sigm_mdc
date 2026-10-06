@@ -24,6 +24,9 @@ export class ModuleMapper {
             variant: ormEntity.secondaryAction.variant,
           }
         : null,
+      isUnderMaintenance: ormEntity.isUnderMaintenance ?? false,
+      maintenanceMessage: ormEntity.maintenanceMessage ?? null,
+      estimatedRecoveryTime: ormEntity.estimatedRecoveryTime ?? null,
     });
   }
 
@@ -48,6 +51,9 @@ export class ModuleMapper {
           variant: domainEntity.secondaryAction.variant,
         }
       : null;
+    orm.isUnderMaintenance = domainEntity.isUnderMaintenance;
+    orm.maintenanceMessage = domainEntity.maintenanceMessage;
+    orm.estimatedRecoveryTime = domainEntity.estimatedRecoveryTime;
     return orm;
   }
 }

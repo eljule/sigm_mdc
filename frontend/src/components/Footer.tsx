@@ -6,7 +6,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center text-center space-y-2">
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
           Municipalidad Distrital de Castilla &copy; 2026 &bull; Todos los derechos reservados. &bull; Desarrollado por{' '}
-          <span className="font-semibold text-emerald-700 dark:text-emerald-400">ODT</span>
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">Ing. Julio Chavez Crisanto</span>
         </p>
         <p className="text-[11px] text-slate-500 dark:text-slate-500">
           Oficina de Desarrollo Tecnológico &bull; Transformación Digital y Transparencia

@@ -6,7 +6,7 @@ export const FALLBACK_MODULES: Module[] = [
     code: 'central_dashboard',
     name: 'Dashboard Central y Configuración',
     description: 'Núcleo y launcher del SIGM con accesos consolidados, métricas generales y administración de parámetros.',
-    iconUrl: 'icons/dashboard.svg',
+    iconUrl: '🏢',
     route: '/admin',
     accentColor: '#16a34a', // Verde institucional
     order: 1,
@@ -19,7 +19,7 @@ export const FALLBACK_MODULES: Module[] = [
     code: 'transport_licenses',
     name: 'Licencias de Transportes',
     description: 'Empadronamiento de vehículos menores, licencias de conducir y registro de mototaxis del distrito.',
-    iconUrl: 'icons/transport.svg',
+    iconUrl: '🚗',
     route: '/transportes',
     accentColor: '#ea580c', // Naranja vibrante
     order: 2,
@@ -32,7 +32,7 @@ export const FALLBACK_MODULES: Module[] = [
     code: 'it_inventory',
     name: 'Inventario y Gestión TI',
     description: 'Gestión de activos de hardware y software (ITAM), asignación por dependencias y control de garantías.',
-    iconUrl: 'icons/inventory.svg',
+    iconUrl: '💻',
     route: '/itam',
     accentColor: '#2563eb', // Azul corporativo
     order: 3,
@@ -45,7 +45,7 @@ export const FALLBACK_MODULES: Module[] = [
     code: 'helpdesk_support',
     name: 'Soporte Técnico y Helpdesk',
     description: 'Mesa de partes y resolución de incidencias informáticas, seguimiento de tickets y atención a usuarios.',
-    iconUrl: 'icons/helpdesk.svg',
+    iconUrl: '🎧',
     route: '/soporte',
     accentColor: '#7c3aed', // Morado
     order: 4,
@@ -111,3 +111,129 @@ export async function getActiveModules(allowedCodes?: string[]): Promise<Module[
     return filterModules(FALLBACK_MODULES);
   }
 }
+
+function getBaseUrl(): string {
+  return (
+    (typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : process.env.INTERNAL_API_URL) ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:4000'
+  );
+}
+
+/**
+ * Obtiene todos los subsistemas (incluidos inactivos y en mantenimiento) para el panel de administración.
+ */
+export async function getAllModules(): Promise<Module[]> {
+  const baseUrl = getBaseUrl();
+  try {
+    const res = await fetch(`${baseUrl}/api/v1/modules?all=true`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const responseJson: ApiResponse<Module[]> = await res.json();
+      if (responseJson.success && Array.isArray(responseJson.data)) {
+        return responseJson.data;
+      }
+    }
+  } catch (error) {
+    console.warn('[ModulesService] Error al obtener todos los subsistemas:', error);
+  }
+  return FALLBACK_MODULES;
+}
+
+/**
+ * Obtiene un subsistema por código o UUID.
+ */
+export async function getModuleByIdOrCode(idOrCode: string): Promise<Module | null> {
+  const baseUrl = getBaseUrl();
+  try {
+    const res = await fetch(`${baseUrl}/api/v1/modules/${encodeURIComponent(idOrCode)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const responseJson: ApiResponse<Module> = await res.json();
+      if (responseJson.success && responseJson.data) {
+        return responseJson.data;
+      }
+    }
+  } catch (error) {
+    console.warn(`[ModulesService] Error al obtener subsistema ${idOrCode}:`, error);
+  }
+
+  // Fallback local por código
+  const fallback = FALLBACK_MODULES.find(
+    (m) => m.code.toLowerCase() === idOrCode.toLowerCase() || m.id === idOrCode,
+  );
+  return fallback || null;
+}
+
+/**
+ * Registra un nuevo subsistema en el núcleo SIGM.
+ */
+export async function createModule(data: Partial<Module>): Promise<Module> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/v1/modules`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const responseJson = await res.json();
+  if (!res.ok || !responseJson.success) {
+    throw new Error(responseJson.message || 'Error al registrar nuevo subsistema');
+  }
+
+  return responseJson.data;
+}
+
+/**
+ * Actualiza los parámetros de un subsistema existente.
+ */
+export async function updateModule(id: string, data: Partial<Module>): Promise<Module> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/v1/modules/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const responseJson = await res.json();
+  if (!res.ok || !responseJson.success) {
+    throw new Error(responseJson.message || 'Error al actualizar subsistema');
+  }
+
+  return responseJson.data;
+}
+
+/**
+ * Conmuta o establece el modo mantenimiento de un subsistema.
+ */
+export async function setModuleMaintenance(
+  id: string,
+  payload: {
+    isUnderMaintenance: boolean;
+    maintenanceMessage?: string | null;
+    estimatedRecoveryTime?: string | null;
+  },
+): Promise<Module> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/v1/modules/${id}/maintenance`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const responseJson = await res.json();
+  if (!res.ok || !responseJson.success) {
+    throw new Error(responseJson.message || 'Error al actualizar estado de mantenimiento');
+  }
+
+  return responseJson.data;
+}
+

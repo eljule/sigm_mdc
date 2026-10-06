@@ -52,6 +52,15 @@ export class ModuleEntity {
   @Column({ name: 'secondary_action', type: 'jsonb', nullable: true })
   secondaryAction!: OrmSecondaryAction | null;
 
+  @Column({ name: 'is_under_maintenance', type: 'boolean', default: false })
+  isUnderMaintenance!: boolean;
+
+  @Column({ name: 'maintenance_message', type: 'text', nullable: true })
+  maintenanceMessage!: string | null;
+
+  @Column({ name: 'estimated_recovery_time', type: 'varchar', length: 255, nullable: true })
+  estimatedRecoveryTime!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 

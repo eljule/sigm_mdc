@@ -222,13 +222,16 @@ export interface CreateMovementPayload {
 // -----------------------------------------------------------------------------
 export interface Supply {
   id: string;
+  code?: string;
   name: string;
   category: string; // TONER, CABLEADO, CONECTORES, PASTA_TERMICA, HERRAMIENTAS, OTROS
   unit: string; // UNIDAD, METROS, CAJA, TUBO
   stock: number;
   minStock: number; // Umbral de alerta (default 2)
   isCritical?: boolean; // Calculado si stock <= minStock
+  unitCost?: number;
   location?: string | null;
+  compatibleModels?: string | null;
   notes?: string | null;
   isActive: boolean;
   createdAt?: string;
@@ -253,7 +256,7 @@ export interface MaintenanceOrder {
   assetId: string;
   asset?: Asset;
   maintenanceType: 'PREVENTIVO' | 'CORRECTIVO';
-  status: 'PROGRAMADO' | 'EN_PROCESO' | 'FINALIZADO' | 'CANCELADO';
+  status: 'PROGRAMADO' | 'EN_PROCESO' | 'COMPLETADO' | 'FINALIZADO' | 'CANCELADO';
   priority: 'BAJA' | 'MEDIA' | 'ALTA' | 'CRITICA';
   scheduledDate: string;
   completedDate?: string | null;
@@ -280,6 +283,7 @@ export interface CreateMaintenanceOrderPayload {
 }
 
 export interface CompleteMaintenancePayload {
+  diagnosis?: string;
   actionsTaken: string;
   technicianName?: string;
   completedDate?: string;
@@ -308,7 +312,7 @@ export interface AssetLoan {
   startDate: string;
   estimatedEndDate: string;
   actualReturnDate?: string | null;
-  status: 'ACTIVO' | 'RETORNADO' | 'CON_RETRASO';
+  status: 'ACTIVO' | 'RETORNADO' | 'DEVUELTO' | 'RESERVADO' | 'ENTREGADO' | 'VENCIDO' | 'CON_RETRASO';
   returnCondition?: string | null;
   notes?: string | null;
   items?: AssetLoanItem[];
@@ -350,6 +354,7 @@ export interface InventoryAudit {
   startDate: string;
   closeDate?: string | null;
   snapshotData?: Record<string, any>;
+  totalAssetsSnapshot?: number;
   notes?: string | null;
   verifications?: AuditVerification[];
   createdAt: string;

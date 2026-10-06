@@ -18,6 +18,9 @@ export interface Module {
   isActive: boolean;
   requiresAuth: boolean;
   secondaryAction: SecondaryAction | null;
+  isUnderMaintenance?: boolean;
+  maintenanceMessage?: string | null;
+  estimatedRecoveryTime?: string | null;
 }
 
 export interface ApiResponse<T> {

@@ -29,12 +29,14 @@ import { PermissionsCatalogView } from '../../src/components/admin/PermissionsCa
 import { PermissionAssignmentMatrix } from '../../src/components/admin/PermissionAssignmentMatrix';
 import { RoleFormModal } from '../../src/components/admin/RoleFormModal';
 import { OfficesManagementView } from '../../src/components/admin/OfficesManagementView';
+import { SubsystemsManagementView } from '../../src/components/admin/SubsystemsManagementView';
 import { PersonCeaseModal } from '../../src/components/admin/PersonCeaseModal';
 import { PersonCeaseDetailModal } from '../../src/components/admin/PersonCeaseDetailModal';
 import { PersonFormModal } from '../../src/components/admin/PersonFormModal';
 import { CeasePersonResult } from '../../src/types/admin';
 import { officeService } from '../../src/services/office.service';
 import { OfficeItem } from '../../src/types/office';
+import { Pagination } from '../../src/components/Pagination';
 
 type AdminTab =
   | 'dashboard'
@@ -137,6 +139,22 @@ export default function AdminPage() {
   const [roleToEdit, setRoleToEdit] = useState<RoleItem | null>(null);
   const [personForCease, setPersonForCease] = useState<Person | null>(null);
   const [personForCeaseDetail, setPersonForCeaseDetail] = useState<Person | null>(null);
+
+  // Paginación para Personas y Usuarios
+  const [peoplePage, setPeoplePage] = useState<number>(1);
+  const [peoplePageSize, setPeoplePageSize] = useState<number>(10);
+  const [usersPage, setUsersPage] = useState<number>(1);
+  const [usersPageSize, setUsersPageSize] = useState<number>(10);
+
+  const paginatedPeople = React.useMemo(() => {
+    const start = (peoplePage - 1) * peoplePageSize;
+    return people.slice(start, start + peoplePageSize);
+  }, [people, peoplePage, peoplePageSize]);
+
+  const paginatedUsers = React.useMemo(() => {
+    const start = (usersPage - 1) * usersPageSize;
+    return users.slice(start, start + usersPageSize);
+  }, [users, usersPage, usersPageSize]);
 
 
 
@@ -288,6 +306,7 @@ export default function AdminPage() {
 
   // Cargar personas con filtro
   const handleSearchPeople = async () => {
+    setPeoplePage(1);
     const data = await adminService.getPeople({
       type: peopleFilterType,
       search: peopleSearch,
@@ -979,7 +998,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {people.map((p) => {
+                      {paginatedPeople.map((p) => {
                         const isPersonal = p.type === 'PERSONAL';
                         const isCesado = p.laborStatus === 'CESADO' || (!p.isActive && isPersonal);
                         return (
@@ -1130,6 +1149,14 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={peoplePage}
+                  totalItems={people.length}
+                  pageSize={peoplePageSize}
+                  onPageChange={setPeoplePage}
+                  onPageSizeChange={setPeoplePageSize}
+                  itemLabel="personas"
+                />
               </div>
             </div>
           )}
@@ -1210,7 +1237,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {users.map((u) => {
+                      {paginatedUsers.map((u) => {
                         const isRoot = u.username.toUpperCase() === 'ROOT';
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
@@ -1283,6 +1310,14 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={usersPage}
+                  totalItems={users.length}
+                  pageSize={usersPageSize}
+                  onPageChange={setUsersPage}
+                  onPageSizeChange={setUsersPageSize}
+                  itemLabel="usuarios"
+                />
               </div>
             </div>
           )}
@@ -1334,55 +1369,7 @@ export default function AdminPage() {
           {/* ===================================================================== */}
           {/* VISTA 5: SUBSISTEMAS DEL SIGM                                        */}
           {/* ===================================================================== */}
-          {activeTab === 'subsystems' && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Catálogo de Subsistemas SIGM
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Módulos desacoplados registrados en el núcleo del sistema con sus rutas y adaptadores.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {AVAILABLE_MODULES.map((mod) => (
-                  <div
-                    key={mod.code}
-                    className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-3xl">{mod.icon}</span>
-                        <span
-                          className="px-2.5 py-1 rounded-full text-xs font-bold text-white"
-                          style={{ backgroundColor: mod.color }}
-                        >
-                          Ruta: {mod.route}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                        {mod.name}
-                      </h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                        {mod.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">● Servicio Activo</span>
-                      <a
-                        href={mod.route}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
-                      >
-                        Ingresar &rarr;
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {activeTab === 'subsystems' && <SubsystemsManagementView />}
         </main>
       </div>
 

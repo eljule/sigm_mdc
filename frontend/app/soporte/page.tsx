@@ -22,7 +22,9 @@ import { helpdeskService } from '@/services/helpdesk.service';
 import { UserSummary } from '@/types/auth';
 import { authService } from '@/services/auth.service';
 import { canAccessModule, isReportanteUser } from '@/utils/auth-guard';
+import { getModuleByIdOrCode } from '@/services/modules.service';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Pagination } from '@/components/Pagination';
 
 // Modales de Helpdesk
 import { TicketFormModal } from '@/components/helpdesk/TicketFormModal';
@@ -63,6 +65,10 @@ export default function SoportePage() {
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
 
+  // Paginación de tickets
+  const [ticketsPage, setTicketsPage] = useState<number>(1);
+  const [ticketsPageSize, setTicketsPageSize] = useState<number>(10);
+
   // Filtros de base de conocimiento
   const [kbSearchQuery, setKbSearchQuery] = useState('');
   const [kbCategoryFilter, setKbCategoryFilter] = useState('ALL');
@@ -90,31 +96,50 @@ export default function SoportePage() {
   const [kbModalMode, setKbModalMode] = useState<'VIEW' | 'CREATE'>('VIEW');
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    if (!canAccessModule(user, 'helpdesk_support')) {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(
-          'sigm_access_denied_message',
-          'Acceso no autorizado: Su usuario no cuenta con permisos para el subsistema de Soporte Técnico y Helpdesk.',
-        );
+    const checkAccessAndMaintenance = async () => {
+      const user = authService.getCurrentUser();
+      if (!user) {
+        router.push('/login');
+        return;
       }
-      router.replace('/modulos');
-      return;
-    }
 
-    setCurrentUser(user);
+      if (!canAccessModule(user, 'helpdesk_support')) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            'sigm_access_denied_message',
+            'Acceso no autorizado: Su usuario no cuenta con permisos para el subsistema de Soporte Técnico y Helpdesk.',
+          );
+        }
+        router.replace('/modulos');
+        return;
+      }
 
-    // Si es personal general / solicitante, activar directamente la vista de sus tickets
-    if (isReportanteUser(user)) {
-      setActiveTab('my_tickets');
-    }
+      // Verificación de mantenimiento (excluye ROOT y Administrador Central)
+      const isSuperAdmin =
+        user.username?.toUpperCase() === 'ROOT' ||
+        user.role?.toLowerCase() === 'administrador central';
 
-    loadAllData(user);
+      try {
+        const mod = await getModuleByIdOrCode('helpdesk_support');
+        if (mod?.isUnderMaintenance && !isSuperAdmin) {
+          router.replace('/mantenimiento?code=helpdesk_support');
+          return;
+        }
+      } catch (e) {
+        console.warn('Error al verificar mantenimiento:', e);
+      }
+
+      setCurrentUser(user);
+
+      // Si es personal general / solicitante, activar directamente la vista de sus tickets
+      if (isReportanteUser(user)) {
+        setActiveTab('my_tickets');
+      }
+
+      loadAllData(user);
+    };
+
+    checkAccessAndMaintenance();
   }, [router]);
 
   const loadAllData = async (userParam?: UserSummary | null) => {
@@ -345,6 +370,15 @@ export default function SoportePage() {
 
     return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
   });
+
+  useEffect(() => {
+    setTicketsPage(1);
+  }, [searchQuery, statusFilter, priorityFilter, categoryFilter]);
+
+  const paginatedTickets = React.useMemo(() => {
+    const start = (ticketsPage - 1) * ticketsPageSize;
+    return filteredTickets.slice(start, start + ticketsPageSize);
+  }, [filteredTickets, ticketsPage, ticketsPageSize]);
 
   // Filtros aplicados a artículos KB
   const filteredKbArticles = knowledgeArticles.filter((a) => {
@@ -822,14 +856,14 @@ export default function SoportePage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {filteredTickets.length === 0 ? (
+                      {paginatedTickets.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="p-8 text-center text-slate-400 italic">
                             No se encontraron tickets con los filtros seleccionados.
                           </td>
                         </tr>
                       ) : (
-                        filteredTickets.map((t) => (
+                        paginatedTickets.map((t) => (
                           <tr
                             key={t.id}
                             className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
@@ -952,6 +986,14 @@ export default function SoportePage() {
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  currentPage={ticketsPage}
+                  totalItems={filteredTickets.length}
+                  pageSize={ticketsPageSize}
+                  onPageChange={setTicketsPage}
+                  onPageSizeChange={setTicketsPageSize}
+                  itemLabel="tickets"
+                />
               </div>
             </div>
           )}

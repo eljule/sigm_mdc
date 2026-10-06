@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'SIGM | Sistema Integrado de Gestión Municipal - Castilla',
   description:
-    'Portal oficial de acceso y lanzador de subsistemas de la Municipalidad Distrital de Castilla. Desarrollado por ODT.',
+    'Portal oficial de acceso y lanzador de subsistemas de la Municipalidad Distrital de Castilla. Desarrollado por Ing. Julio Chavez Crisanto.',
   keywords: ['Castilla', 'SIGM', 'Municipalidad', 'Gestión Municipal', 'ITAM', 'Helpdesk', 'Transportes'],
 };
 

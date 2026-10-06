@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RoleItem } from '../../types/admin';
+import { Pagination } from '../Pagination';
 
 interface RolesManagementViewProps {
   roles: RoleItem[];
@@ -30,19 +31,32 @@ export const RolesManagementView: React.FC<RolesManagementViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [subsystemFilter, setSubsystemFilter] = useState('TODOS');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Filtrado
-  const filteredRoles = roles.filter((role) => {
-    const matchesSearch =
-      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredRoles = useMemo(() => {
+    return roles.filter((role) => {
+      const matchesSearch =
+        role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        role.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesSubsystem =
-      subsystemFilter === 'TODOS' || role.subsystemCode === subsystemFilter;
+      const matchesSubsystem =
+        subsystemFilter === 'TODOS' || role.subsystemCode === subsystemFilter;
 
-    return matchesSearch && matchesSubsystem;
-  });
+      return matchesSearch && matchesSubsystem;
+    });
+  }, [roles, searchTerm, subsystemFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, subsystemFilter]);
+
+  const paginatedRoles = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRoles.slice(start, start + pageSize);
+  }, [filteredRoles, page, pageSize]);
 
   const systemRolesCount = roles.filter((r) => r.isSystem).length;
   const customRolesCount = roles.filter((r) => !r.isSystem).length;
@@ -186,7 +200,7 @@ export const RolesManagementView: React.FC<RolesManagementViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filteredRoles.map((role) => {
+              {paginatedRoles.map((role) => {
                 const subInfo = SUBSYSTEM_BADGES[role.subsystemCode] || SUBSYSTEM_BADGES.global;
                 const permissionsCount = role.permissionCodes?.length || 0;
                 const percent = totalPermissionsCount > 0 ? Math.round((permissionsCount / totalPermissionsCount) * 100) : 0;
@@ -310,6 +324,14 @@ export const RolesManagementView: React.FC<RolesManagementViewProps> = ({
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={page}
+          totalItems={filteredRoles.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="roles"
+        />
       </div>
     </div>
   );

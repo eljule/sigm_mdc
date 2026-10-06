@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { OfficeItem } from '../../types/office';
 import { officeService } from '../../services/office.service';
 import { OfficeFormModal } from './OfficeFormModal';
+import { Pagination } from '../Pagination';
 
 export const OfficesManagementView: React.FC = () => {
   const [offices, setOffices] = useState<OfficeItem[]>([]);
@@ -14,6 +15,10 @@ export const OfficesManagementView: React.FC = () => {
   const [selectedSede, setSelectedSede] = useState<string>('TODAS');
   const [selectedLevel, setSelectedLevel] = useState<string>('TODOS');
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
+
+  // Paginación
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   // Modal de creación / edición
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -79,28 +84,44 @@ export const OfficesManagementView: React.FC = () => {
     });
   }, [offices, search, selectedSede, selectedLevel]);
 
+  // Reiniciar a página 1 cuando cambian los filtros
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedSede, selectedLevel]);
+
+  const paginatedOffices = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredOffices.slice(start, start + pageSize);
+  }, [filteredOffices, page, pageSize]);
+
   // Colores para sedes
   const getSedeBadgeColor = (sedeName: string) => {
     if (sedeName.includes('PRINCIPAL')) {
       return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
     }
+    if (sedeName.includes('BIBLIOTECA')) {
+      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+    }
+    if (sedeName.includes('GDH')) {
+      return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
+    }
     if (sedeName.includes('RENTAS') || sedeName.includes('TRIBUTARIA')) {
       return 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
     }
-    if (sedeName.includes('OBRAS') || sedeName.includes('DESARROLLO URBANO')) {
-      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
-    }
     if (sedeName.includes('MAESTRANZA') || sedeName.includes('SERVICIOS PÚBLICOS')) {
       return 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-    }
-    if (sedeName.includes('SERENAZGO') || sedeName.includes('SEGURIDAD')) {
-      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
     }
     if (sedeName.includes('MERCADO')) {
       return 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
     }
     if (sedeName.includes('SOCIAL') || sedeName.includes('DEMUNA')) {
       return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+    }
+    if (sedeName.includes('ALMACEN')) {
+      return 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800';
+    }
+    if (sedeName.includes('COSC') || sedeName.includes('SERENAZGO') || sedeName.includes('SEGURIDAD')) {
+      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
     }
     return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
   };
@@ -253,21 +274,19 @@ export const OfficesManagementView: React.FC = () => {
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                viewMode === 'table'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${viewMode === 'table'
+                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
             >
               📋 Tabla
             </button>
             <button
               onClick={() => setViewMode('tree')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                viewMode === 'tree'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${viewMode === 'tree'
+                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
             >
               🌳 Organigrama
             </button>
@@ -299,14 +318,14 @@ export const OfficesManagementView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                {filteredOffices.length === 0 ? (
+                {paginatedOffices.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-12 text-center text-slate-400 italic">
                       No se encontraron dependencias que coincidan con los filtros.
                     </td>
                   </tr>
                 ) : (
-                  filteredOffices.map((office) => (
+                  paginatedOffices.map((office) => (
                     <tr
                       key={office.id}
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
@@ -351,11 +370,10 @@ export const OfficesManagementView: React.FC = () => {
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            office.isActive
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400'
-                              : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
-                          }`}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${office.isActive
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+                            }`}
                         >
                           {office.isActive ? 'Activo' : 'Inactivo'}
                         </span>
@@ -384,12 +402,14 @@ export const OfficesManagementView: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex justify-between items-center">
-            <span>
-              Mostrando {filteredOffices.length} de {offices.length} dependencias registradas
-            </span>
-            <span className="text-[11px] text-slate-400">ROF Municipalidad Distrital de Castilla</span>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalItems={filteredOffices.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel="dependencias"
+          />
         </div>
       ) : (
         /* VISTA ORGANIGRAMA JERÁRQUICO (ÁRBOL) */

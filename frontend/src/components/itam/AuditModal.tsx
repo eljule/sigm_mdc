@@ -83,7 +83,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({
     }
   };
 
-  const handleQuickVerify = async (assetId: string, expectedOffice: string | null) => {
+  const handleQuickVerify = async (assetId: string, expectedOffice?: string | null) => {
     if (!report?.audit.id) return;
     const finalOffice = foundOffice.trim() || expectedOffice || 'Oficina No Especificada';
     const isRelocated = expectedOffice && finalOffice.toLowerCase() !== expectedOffice.toLowerCase();
@@ -371,7 +371,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({
                               <td className="p-2.5 font-mono font-bold text-indigo-700">{v.asset?.computerCode}</td>
                               <td className="p-2.5 font-mono text-slate-500">{v.asset?.patrimonialCode || 'S/C'}</td>
                               <td className="p-2.5">
-                                {v.asset?.category?.name} - {v.asset?.brand?.name} {v.asset?.model?.name}
+                                {v.asset?.categoryName || ''} - {v.asset?.brandName || ''} {v.asset?.modelName || ''}
                               </td>
                               <td className="p-2.5 text-slate-700">{v.expectedOffice || 'Sin Oficina'}</td>
                               <td className="p-2.5 font-semibold text-slate-900">{v.foundOffice || '-'}</td>

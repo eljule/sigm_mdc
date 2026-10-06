@@ -16,13 +16,34 @@ export class TypeOrmModuleRepository implements ModuleRepositoryPort {
     private readonly ormRepository: Repository<ModuleEntity>,
   ) {}
 
-  async findAllActive(): Promise<Module[]> {
+  async findAll(): Promise<Module[]> {
     const ormEntities = await this.ormRepository.find({
-      where: { isActive: true },
-      order: { order: 'ASC' },
+      order: { order: 'ASC', createdAt: 'ASC' },
     });
 
     return ormEntities.map((entity) => ModuleMapper.toDomain(entity));
+  }
+
+  async findAllActive(): Promise<Module[]> {
+    const ormEntities = await this.ormRepository.find({
+      where: { isActive: true },
+      order: { order: 'ASC', createdAt: 'ASC' },
+    });
+
+    return ormEntities.map((entity) => ModuleMapper.toDomain(entity));
+  }
+
+  async findById(id: string): Promise<Module | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) {
+      return null;
+    }
+    const entity = await this.ormRepository.findOne({ where: { id } });
+    if (!entity) {
+      return null;
+    }
+    return ModuleMapper.toDomain(entity);
   }
 
   async findByCode(code: string): Promise<Module | null> {
@@ -46,5 +67,9 @@ export class TypeOrmModuleRepository implements ModuleRepositoryPort {
 
   async count(): Promise<number> {
     return this.ormRepository.count();
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.ormRepository.delete(id);
   }
 }

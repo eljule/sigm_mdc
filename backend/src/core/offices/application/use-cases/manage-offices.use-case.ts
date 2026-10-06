@@ -3,9 +3,21 @@ import { OfficeRepositoryPort, OfficeFilters } from '../../domain/ports/office.r
 import { OfficeEntity } from '../../infrastructure/persistence/entities/office.entity';
 import { CreateOfficeDto, UpdateOfficeDto } from '../dtos/office.dto';
 
+export const OFFICIAL_SEDES: string[] = [
+  'PALACIO MUNICIPAL (SEDE PRINCIPAL)',
+  'SEDE BIBLIOTECA CASTILLA',
+  'SEDE DESARROLLO HUMANO (GDH)',
+  'SEDE ADMINISTRACIÓN TRIBUTARIA (RENTAS)',
+  'SEDE MAESTRANZA Y SERVICIOS PÚBLICOS',
+  'SEDE MERCADO DE CASTILLA',
+  'SEDE PROGRAMAS SOCIAL (DEMUNA)',
+  'SEDE ALMACEN CENTRAL',
+  'SEDE CENTRO DE OBSERVACION DE SEGURIDAD CIUDADANA (COSC)',
+];
+
 @Injectable()
 export class ManageOfficesUseCase {
-  constructor(private readonly officeRepo: OfficeRepositoryPort) {}
+  constructor(private readonly officeRepo: OfficeRepositoryPort) { }
 
   async findAll(filters?: OfficeFilters): Promise<OfficeEntity[]> {
     return this.officeRepo.findAll(filters);
@@ -16,18 +28,18 @@ export class ManageOfficesUseCase {
   }
 
   async findSedes(): Promise<string[]> {
-    const sedes = await this.officeRepo.findDistinctSedes();
-    if (sedes.length === 0) {
-      return [
-        'PALACIO MUNICIPAL (SEDE PRINCIPAL)',
-        'SEDE MAESTRANZA Y SERVICIOS PÚBLICOS',
-        'SEDE SEGURIDAD CIUDADANA / BASE SERENAZGO',
-        'SEDE MERCADO DE CASTILLA',
-        'SEDE PROGRAMAS SOCIALES (DEMUNA / OMAPED / CIAM)',
-        'SEDE ADMINISTRACIÓN TRIBUTARIA (RENTAS)',
-      ];
-    }
-    return sedes;
+    const distinct = await this.officeRepo.findDistinctSedes();
+    const legacySedes = [
+      'SEDE PROGRAMAS SOCIALES (DEMUNA / OMAPED / CIAM)',
+      'SEDE PROGRAMAS SOCIALES (DEMUNA)',
+      'SEDE SEGURIDAD CIUDADANA / BASE SERENAZGO',
+      'SEDE DESARROLLO URBANO Y OBRAS',
+    ];
+    // Garantiza que siempre salgan las 7 sedes oficiales, más cualquier sede personalizada registrada
+    const customSedes = distinct.filter(
+      (s) => !OFFICIAL_SEDES.includes(s) && !legacySedes.includes(s),
+    );
+    return [...OFFICIAL_SEDES, ...customSedes];
   }
 
   async findById(id: string): Promise<OfficeEntity> {
