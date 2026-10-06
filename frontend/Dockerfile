@@ -1,9 +1,9 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
 # Instalar herramientas para healthchecks y scripts
-RUN apk add --no-cache curl bash
+RUN apt-get update && apt-get install -y curl bash && rm -rf /var/lib/apt/lists/*
 
 # Copiar manifiestos de dependencias
 COPY package*.json ./
