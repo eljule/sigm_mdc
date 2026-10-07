@@ -474,8 +474,8 @@ export default function AdminPage() {
       {/* ========================================================================= */}
       {/* 1. CABECERA PRINCIPAL (HEADER)                                           */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-30 w-full bg-[#0c3b24] dark:bg-slate-900 border-b border-emerald-800 dark:border-slate-800 text-white shadow-md">
-        <div className="max-w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-30 w-full bg-[#0d4f2f] dark:bg-slate-900 border-b border-emerald-800 dark:border-slate-800 text-white shadow-md transition-colors duration-200">
+        <div className="max-w-full px-4 sm:px-6 lg:px-8 h-18 py-2.5 flex items-center justify-between">
           {/* Lado izquierdo: Botón menú móvil + Branding */}
           <div className="flex items-center space-x-3.5">
             <button
@@ -489,55 +489,59 @@ export default function AdminPage() {
               </svg>
             </button>
 
-            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
+            <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setActiveTab('dashboard')}>
               <Image
                 src="/images/logo-castilla.png"
-                alt="Escudo Castilla"
-                width={36}
-                height={48}
+                alt="Escudo Oficial del Distrito de Castilla"
+                width={40}
+                height={52}
                 priority
-                className="w-8 h-auto object-contain drop-shadow"
+                className="w-9 h-auto object-contain drop-shadow transition-transform duration-200 group-hover:scale-105"
               />
               <div className="flex flex-col">
-                <span className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-emerald-300">
-                  Municipalidad de Castilla &bull; ODT
+                <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-emerald-200/90 dark:text-emerald-400">
+                  Municipalidad Distrital de Castilla
                 </span>
-                <span className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none">
-                  Dashboard Central y Configuración
+                <span className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight">
+                  SIGM <span className="font-light text-emerald-200">| Panel de Administración</span>
                 </span>
               </div>
             </div>
           </div>
 
           {/* Lado derecho: Acciones de cabecera */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Indicador de estado del backend */}
-            <div className="hidden md:flex items-center space-x-2 text-[11px] bg-emerald-950/60 dark:bg-slate-800 px-3 py-1 rounded-full border border-emerald-600/30 text-emerald-200">
+            <div className="hidden xl:flex items-center space-x-2 text-[11px] bg-emerald-950/60 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-emerald-700/50 text-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>PostgreSQL 16 &bull; NestJS Activo</span>
+              <span>PostgreSQL &bull; NestJS Activo</span>
             </div>
 
             {/* Botón de regreso al lanzador */}
             <button
               onClick={() => router.push('/modulos')}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm border border-emerald-600/50 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm border border-emerald-600/40 transition-all hover:-translate-y-0.5"
               title="Ir a la cuadrícula de subsistemas"
             >
-              <span>&larr;</span>
+              <span>🚀</span>
               <span className="hidden sm:inline">Lanzador</span>
             </button>
 
             {/* Selector de Tema */}
             <ThemeToggle />
 
-            {/* Perfil del Usuario Activo */}
-            <div className="flex items-center space-x-2 pl-2 border-l border-emerald-800 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center font-bold text-white text-xs shadow-inner">
+            {/* Perfil del Usuario Activo Institucional */}
+            <div className="hidden md:flex items-center space-x-3 bg-emerald-900/60 dark:bg-slate-800/80 border border-emerald-700/50 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-xs">
+              <div className="w-7 h-7 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center font-bold text-white shadow-inner">
                 {currentUser.username.substring(0, 2).toUpperCase()}
               </div>
-              <div className="hidden lg:flex flex-col text-left text-xs">
-                <span className="font-bold text-white leading-tight">{currentUser.fullName}</span>
-                <span className="text-[10px] text-emerald-300">{currentUser.role}</span>
+              <div className="flex flex-col text-left">
+                <span className="font-bold text-white leading-tight">
+                  {currentUser.fullName}
+                </span>
+                <span className="text-[10px] text-emerald-300 font-medium">
+                  {currentUser.role}
+                </span>
               </div>
             </div>
           </div>
@@ -623,7 +627,7 @@ export default function AdminPage() {
                   {!sidebarCollapsed && (
                     <div className="flex-1 flex items-center justify-between text-left">
                       <span>Usuarios</span>
-                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                         {users.length}
                       </span>
                     </div>

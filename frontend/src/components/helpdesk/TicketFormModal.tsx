@@ -110,17 +110,17 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[94vh] flex flex-col overflow-hidden animate-fadeIn">
         {/* Cabecera Móvil y Web */}
-        <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 px-6 py-4 text-white flex justify-between items-center">
+        <div className="bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] px-6 py-4 text-white flex justify-between items-center">
           <div>
             <h3 className="font-bold text-base md:text-lg flex items-center">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-400 mr-2 animate-ping"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
               Reportar Falla Técnica (Mesa de Ayuda)
             </h3>
-            <p className="text-xs text-blue-200">
+            <p className="text-xs text-emerald-200">
               Atención inmediata de la Subgerencia de Informática y Sistemas - MDC
             </p>
           </div>
-          <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded-md">
+          <button onClick={onClose} className="text-emerald-200 hover:text-white p-1 rounded-md">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -135,12 +135,12 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
           )}
 
           {/* Paso 1: Detección Automática de Dependencia y Responsable (RF-02) */}
-          <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-3.5 space-y-2">
+          <div className="bg-emerald-50/60 border border-emerald-200 rounded-lg p-3.5 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
                 1. Datos del Solicitante y Ubicación (Detección Automática)
               </span>
-              <span className="text-[10px] text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-200 font-medium">
+              <span className="text-[10px] text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 font-medium">
                 Sesión Activa
               </span>
             </div>
@@ -277,7 +277,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
                   onClick={() => setCategory(cat.id as TicketCategory)}
                   className={`p-2.5 rounded-lg border text-left transition-all ${
                     category === cat.id
-                      ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500 shadow-sm'
+                      ? 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500 shadow-sm'
                       : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
                   }`}
                 >
@@ -394,7 +394,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-md"
+              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-md"
             >
               {submitting ? 'Registrando Ticket...' : 'Registrar Ticket de Soporte'}
             </button>

@@ -103,7 +103,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 Configuración de Parámetros Técnicos
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold uppercase bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold uppercase bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
                   {category.code}
                 </span>
               </h2>
@@ -121,7 +121,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
               onClick={() => setActiveTab('editor')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
                 activeTab === 'editor'
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
@@ -132,7 +132,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
               onClick={() => setActiveTab('preview')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
                 activeTab === 'preview'
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
@@ -167,7 +167,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAddField}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -181,7 +181,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
                 {fields.map((field, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all space-y-3"
+                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all space-y-3"
                   >
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-2">
                       <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
                             type="checkbox"
                             checked={field.required}
                             onChange={(e) => handleUpdateField(idx, { required: e.target.checked })}
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            className="rounded text-emerald-600 focus:ring-emerald-500"
                           />
                           <span>Obligatorio</span>
                         </label>
@@ -330,7 +330,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-700 dark:text-blue-300">
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-xs text-emerald-800 dark:text-emerald-300">
                 Esta es la visualización exacta que verá el operador al registrar o editar activos pertenecientes a la categoría <strong>{category.name}</strong>.
               </div>
 
@@ -370,7 +370,7 @@ export const CategorySchemaModal: React.FC<CategorySchemaModalProps> = ({
               type="button"
               disabled={isSaving}
               onClick={handleSave}
-              className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors disabled:opacity-50"
             >
               {isSaving ? (
                 <>

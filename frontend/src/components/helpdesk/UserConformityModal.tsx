@@ -46,12 +46,12 @@ export const UserConformityModal: React.FC<UserConformityModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-fadeIn">
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-4 text-white flex justify-between items-center">
+        <div className="bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] px-6 py-4 text-white flex justify-between items-center">
           <div>
             <h3 className="font-bold text-lg">Mecanismo de Conformidad de Cierre (RF-05)</h3>
-            <p className="text-xs text-blue-100">Ticket: {ticket.ticketNumber} - {ticket.subject}</p>
+            <p className="text-xs text-emerald-100">Ticket: {ticket.ticketNumber} - {ticket.subject}</p>
           </div>
-          <button onClick={onClose} className="text-blue-200 hover:text-white">
+          <button onClick={onClose} className="text-emerald-200 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -156,7 +156,7 @@ export const UserConformityModal: React.FC<UserConformityModalProps> = ({
               onChange={(e) => setFeedback(e.target.value)}
               rows={3}
               required
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder={isConforming ? 'Ej. Atención muy rápida y oportuna...' : 'Describa el inconveniente que aún persiste...'}
             />
           </div>
@@ -174,7 +174,7 @@ export const UserConformityModal: React.FC<UserConformityModalProps> = ({
               type="submit"
               disabled={submitting}
               className={`px-4 py-2 text-xs font-medium text-white rounded-lg transition-colors shadow-sm ${
-                isConforming ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                isConforming ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'
               }`}
             >
               {submitting

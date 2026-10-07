@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Ticket,
   TicketStatus,
@@ -400,13 +401,13 @@ export default function SoportePage() {
       {/* ========================================================================= */}
       {/* 1. CABECERA INSTITUCIONAL MUNICIPAL (CASTILLA)                            */}
       {/* ========================================================================= */}
-      <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-lg">
-        <div className="px-4 sm:px-6 py-2.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 w-full bg-[#0d4f2f] dark:bg-slate-900 border-b border-emerald-800 dark:border-slate-800 text-white shadow-md transition-colors duration-200">
+        <div className="max-w-full px-4 sm:px-6 lg:px-8 h-18 py-2.5 flex items-center justify-between">
           {/* Logo y Nombre del Subsistema */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3.5">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-emerald-100 hover:text-white hover:bg-emerald-800/80 transition-colors"
               title={sidebarCollapsed ? 'Expandir menú' : 'Contraer menú'}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -414,22 +415,28 @@ export default function SoportePage() {
               </svg>
             </button>
 
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md text-base">
-                🎧
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-sm tracking-tight text-white">
-                    MUNICIPALIDAD DISTRITAL DE CASTILLA
+            <div
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => setActiveTab('tickets')}
+            >
+              <Image
+                src="/images/logo-castilla.png"
+                alt="Escudo Oficial del Distrito de Castilla"
+                width={40}
+                height={52}
+                priority
+                className="w-9 h-auto object-contain drop-shadow transition-transform duration-200 group-hover:scale-105"
+              />
+              <div className="flex flex-col">
+                <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-emerald-200/90 dark:text-emerald-400">
+                  Municipalidad Distrital de Castilla
+                </span>
+                <span className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight flex items-center gap-2">
+                  <span>SIGM <span className="font-light text-emerald-200">| Soporte Técnico y Helpdesk</span></span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    v1.0
                   </span>
-                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-widest font-mono">
-                    Helpdesk v1.0
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Soporte Técnico y Mesa de Ayuda Municipal (SRS Octubre 2026)
-                </p>
+                </span>
               </div>
             </div>
           </div>
@@ -444,7 +451,7 @@ export default function SoportePage() {
                       setStatusFilter('ABIERTO');
                       setActiveTab('tickets');
                     }}
-                    className="hidden md:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold animate-pulse"
+                    className="hidden md:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-xs font-bold animate-pulse"
                   >
                     <span>🔔</span>
                     <span>{metrics.openCount} Abiertos</span>
@@ -457,7 +464,7 @@ export default function SoportePage() {
                       setStatusFilter('EN_LABORATORIO');
                       setActiveTab('tickets');
                     }}
-                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold"
+                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold"
                   >
                     <span>🔬</span>
                     <span>{metrics.inLabCount} En Taller</span>
@@ -479,7 +486,7 @@ export default function SoportePage() {
             {canAccessModule(currentUser, 'it_inventory') && (
               <Link
                 href="/itam"
-                className="hidden lg:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-blue-900/60 hover:bg-blue-800 text-white text-xs font-semibold border border-blue-700/50 transition-colors"
+                className="hidden lg:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 text-xs font-semibold border border-emerald-700/50 transition-colors"
               >
                 <span>🖥️</span>
                 <span>ITAM</span>
@@ -490,7 +497,7 @@ export default function SoportePage() {
             {canAccessModule(currentUser, 'central_dashboard') && (
               <Link
                 href="/admin"
-                className="hidden lg:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-white text-xs font-semibold border border-emerald-700/50 transition-colors"
+                className="hidden lg:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 text-xs font-semibold border border-emerald-700/50 transition-colors"
               >
                 <span>⚙️</span>
                 <span>Central</span>
@@ -499,7 +506,7 @@ export default function SoportePage() {
 
             <Link
               href="/modulos"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-colors"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm border border-emerald-600/40 transition-all hover:-translate-y-0.5"
             >
               <span>🚀</span>
               <span className="hidden sm:inline">Lanzador</span>
@@ -507,16 +514,16 @@ export default function SoportePage() {
 
             <ThemeToggle />
 
-            {/* Perfil del Usuario Activo */}
-            <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
-              <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-inner">
+            {/* Perfil del Usuario Activo Institucional */}
+            <div className="hidden md:flex items-center space-x-3 bg-emerald-900/60 dark:bg-slate-800/80 border border-emerald-700/50 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-xs">
+              <div className="w-7 h-7 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center font-bold text-white shadow-inner">
                 {(currentUser.fullName || currentUser.username || 'U').charAt(0).toUpperCase()}
               </div>
-              <div className="hidden lg:flex flex-col text-left text-xs">
+              <div className="flex flex-col text-left">
                 <span className="font-bold text-white leading-tight">
                   {currentUser.fullName || currentUser.username}
                 </span>
-                <span className="text-[10px] text-indigo-300">{currentUser.role}</span>
+                <span className="text-[10px] text-emerald-300 font-medium">{currentUser.role}</span>
               </div>
             </div>
           </div>
@@ -526,9 +533,9 @@ export default function SoportePage() {
       {/* Notificación flotante */}
       {alert && (
         <div
-          className={`fixed top-16 right-6 z-50 p-4 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold flex items-center space-x-2 animate-bounce ${
+          className={`fixed top-20 right-6 z-50 p-4 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold flex items-center space-x-2 animate-bounce ${
             alert.type === 'success'
-              ? 'bg-blue-600 text-white border border-blue-500'
+              ? 'bg-emerald-600 text-white border border-emerald-500'
               : 'bg-rose-600 text-white border border-rose-500'
           }`}
         >
@@ -562,7 +569,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('my_tickets')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'my_tickets'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Seguimiento Ágil y Visto Bueno del Solicitante"
@@ -571,7 +578,7 @@ export default function SoportePage() {
                       {!sidebarCollapsed && (
                         <div className="flex-1 flex items-center justify-between text-left">
                           <span>Mis Tickets</span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                             {myTickets.length}
                           </span>
                         </div>
@@ -593,7 +600,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('knowledge')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'knowledge'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Guías de Solución Técnica Estandarizadas"
@@ -616,7 +623,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('tickets')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'tickets'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Bandeja General de Tickets de Soporte"
@@ -625,7 +632,7 @@ export default function SoportePage() {
                       {!sidebarCollapsed && (
                         <div className="flex-1 flex items-center justify-between text-left">
                           <span>Bandeja de Tickets</span>
-                          <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 px-1.5 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                             {tickets.length}
                           </span>
                         </div>
@@ -637,7 +644,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('my_tickets')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'my_tickets'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Seguimiento Ágil y Visto Bueno del Solicitante"
@@ -646,7 +653,7 @@ export default function SoportePage() {
                       {!sidebarCollapsed && (
                         <div className="flex-1 flex items-center justify-between text-left">
                           <span>Mis Tickets (Usuario)</span>
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                             {myTickets.length}
                           </span>
                         </div>
@@ -658,7 +665,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('workload')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'workload'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Balanceo de Cargas de Trabajo y Tiempos de Atención"
@@ -672,7 +679,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('knowledge')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'knowledge'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Guías de Solución Técnica Estandarizadas"
@@ -693,7 +700,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('qr_scanner')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'qr_scanner'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Escaneo o Búsqueda de Bien por QR Adherido"
@@ -707,7 +714,7 @@ export default function SoportePage() {
                       onClick={() => setActiveTab('metrics')}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === 'metrics'
-                          ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border-r-4 border-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                       title="Tiempos de Respuesta, Resolución y Satisfacción"
@@ -832,7 +839,7 @@ export default function SoportePage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-md transition-colors flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md transition-colors flex items-center space-x-1.5"
                   >
                     <span>+</span>
                     <span>Registrar Incidencia</span>
@@ -868,7 +875,7 @@ export default function SoportePage() {
                             key={t.id}
                             className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                           >
-                            <td className="p-3 font-mono font-bold text-indigo-700 dark:text-indigo-400 whitespace-nowrap">
+                            <td className="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
                               {t.ticketNumber}
                               <div className="text-[10px] text-slate-400 font-sans font-normal">
                                 {new Date(t.createdAt).toLocaleDateString()}
@@ -1003,19 +1010,19 @@ export default function SoportePage() {
           {/* ===================================================================== */}
           {activeTab === 'my_tickets' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] p-6 rounded-2xl text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-200">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">
                     Portal del Solicitante (RF-01 / RF-05)
                   </span>
                   <h2 className="text-xl font-bold mt-1">Seguimiento de Tickets y Visto Bueno</h2>
-                  <p className="text-xs text-blue-100 mt-1 max-w-xl leading-relaxed">
+                  <p className="text-xs text-emerald-100/90 mt-1 max-w-xl leading-relaxed">
                     Consulte en tiempo real el estado de atención de las incidencias reportadas en su área, el contacto del técnico asignado y otorgue la conformidad para el cierre definitivo.
                   </p>
                 </div>
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="px-5 py-2.5 bg-white text-blue-900 hover:bg-blue-50 rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap"
+                  className="px-5 py-2.5 bg-white text-emerald-950 hover:bg-emerald-50 rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap"
                 >
                   + Reportar Falla Técnica
                 </button>
@@ -1041,7 +1048,7 @@ export default function SoportePage() {
                     >
                       <div className="space-y-1.5 flex-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-mono font-bold text-sm text-indigo-700 dark:text-indigo-400">
+                          <span className="font-mono font-bold text-sm text-emerald-700 dark:text-emerald-400">
                             {t.ticketNumber}
                           </span>
                           <span
@@ -1252,7 +1259,7 @@ export default function SoportePage() {
                       setSelectedKbArticle(null);
                       setIsKbModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors whitespace-nowrap"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors whitespace-nowrap"
                   >
                     + Publicar Nueva Guía
                   </button>
@@ -1324,7 +1331,7 @@ export default function SoportePage() {
                           setKbModalMode('VIEW');
                           setIsKbModalOpen(true);
                         }}
-                        className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 rounded-lg text-xs font-semibold transition-colors"
+                        className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-lg text-xs font-semibold transition-colors"
                       >
                         Leer Solución Completa →
                       </button>
@@ -1355,13 +1362,13 @@ export default function SoportePage() {
                     value={qrCodeInput}
                     onChange={(e) => setQrCodeInput(e.target.value)}
                     placeholder="Ej. MDC-TI-PC-0001 o 740895000101"
-                    className="flex-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono uppercase focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:text-white"
+                    className="flex-1 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono uppercase focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={handleLookupQrAsset}
                     disabled={qrLoading || !qrCodeInput.trim()}
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
                   >
                     {qrLoading ? 'Buscando...' : 'Consultar Bien'}
                   </button>
@@ -1376,7 +1383,7 @@ export default function SoportePage() {
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-4 animate-fadeIn">
                   <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-3">
                     <div>
-                      <span className="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-900">
+                      <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                         {scannedAsset.computerCode}
                       </span>
                       <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1">

@@ -63,12 +63,12 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-xl text-blue-600 dark:text-blue-400">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-xl text-emerald-700 dark:text-emerald-400">
               💻
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-extrabold text-blue-600 dark:text-blue-400">
+                <span className="font-mono text-base font-extrabold text-emerald-800 dark:text-emerald-300">
                   {asset.computerCode}
                 </span>
                 <span
@@ -109,9 +109,9 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Top Banner: Equipment Summary + QR Code */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-800/40 dark:to-blue-950/20 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 dark:from-slate-800/40 dark:to-emerald-950/20 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 flex-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                 {asset.categoryName || 'Equipo Tecnológico'}
               </span>
               <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
@@ -253,12 +253,12 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
           </div>
 
           {/* Especificaciones Técnicas Dinámicas */}
-          <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/20 space-y-3">
+          <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20 dark:bg-emerald-950/20 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                 Especificaciones Técnicas Registradas ({asset.categoryName})
               </h4>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-semibold">
                 Esquema Dinámico
               </span>
             </div>
@@ -348,7 +348,7 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
               onClose();
               onEdit(asset);
             }}
-            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />

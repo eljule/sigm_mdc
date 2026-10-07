@@ -62,12 +62,12 @@ export const ChildAssetsModal: React.FC<ChildAssetsModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] text-white">
           <div className="flex items-center space-x-3">
             <span className="text-2xl">🔗</span>
             <div>
               <h2 className="text-base font-bold">Relación Jerárquica Componentes (Padre - Hijo)</h2>
-              <p className="text-xs text-blue-100">
+              <p className="text-xs text-emerald-100/90">
                 {parentAsset.computerCode} — {parentAsset.brandName} {parentAsset.modelName} ({parentAsset.office || 'Sin Oficina'})
               </p>
             </div>
@@ -90,7 +90,7 @@ export const ChildAssetsModal: React.FC<ChildAssetsModalProps> = ({
           )}
 
           {/* Explanation note */}
-          <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800">
             <strong>Requisito RF-05:</strong> En una estación de trabajo (activo padre), vincule teclado, mouse, monitor y estabilizador como activos independientes con su propio código o serie. Al realizar un traslado, podrá moverlos conjuntamente en bloque.
           </div>
 
@@ -103,7 +103,7 @@ export const ChildAssetsModal: React.FC<ChildAssetsModalProps> = ({
               <select
                 value={selectedChildId}
                 onChange={(e) => setSelectedChildId(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               >
                 <option value="">-- Seleccionar periférico disponible ({candidateAssets.length} disponibles) --</option>
                 {candidateAssets.map((cand) => (
@@ -115,7 +115,7 @@ export const ChildAssetsModal: React.FC<ChildAssetsModalProps> = ({
               <button
                 onClick={handleLink}
                 disabled={!selectedChildId || loading}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow transition"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow transition"
               >
                 {loading ? 'Vinculando...' : 'Asociar'}
               </button>

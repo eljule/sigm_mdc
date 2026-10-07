@@ -114,13 +114,13 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-fadeIn">
         {/* Encabezado */}
-        <div className="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
+        <div className="bg-[#0d4f2f] px-6 py-4 text-white flex justify-between items-center border-b border-emerald-800">
           <div className="flex items-center space-x-3">
-            <span className="font-mono font-bold text-lg text-blue-400">{ticket.ticketNumber}</span>
+            <span className="font-mono font-bold text-lg text-emerald-300">{ticket.ticketNumber}</span>
             {getStatusBadge(ticket.status)}
             {getPriorityBadge(ticket.priority)}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-md">
+          <button onClick={onClose} className="text-emerald-200 hover:text-white p-1 rounded-md">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -212,7 +212,7 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                 type="button"
                 disabled={actionLoading}
                 onClick={handleResume}
-                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold shadow-sm transition-colors"
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold shadow-sm transition-colors"
               >
                 ▶️ Reanudar Atención
               </button>
@@ -223,7 +223,7 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <button
                 type="button"
                 onClick={onOpenConformityModal}
-                className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded font-bold shadow-sm transition-colors"
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold shadow-sm transition-colors"
               >
                 ⭐ Otorgar Visto Bueno (Cierre)
               </button>

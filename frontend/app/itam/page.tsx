@@ -376,18 +376,36 @@ export default function ItamPage() {
     setIsActaModalOpen(true);
   };
 
-  if (isLoading || !currentUser) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Cargando Módulo Integral de Gestión de Activos TI (ITAM)...</p>
-      </div>
-    );
-  }
+  // Filtro dinámico de inventario de activos
+  const filteredAssets = React.useMemo(() => {
+    return assets.filter((a) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        q === '' ||
+        (a.computerCode && a.computerCode.toLowerCase().includes(q)) ||
+        (a.patrimonialCode && a.patrimonialCode.toLowerCase().includes(q)) ||
+        (a.serialNumber && a.serialNumber.toLowerCase().includes(q)) ||
+        (a.assignedPersonName && a.assignedPersonName.toLowerCase().includes(q)) ||
+        (a.brandName && a.brandName.toLowerCase().includes(q)) ||
+        (a.modelName && a.modelName.toLowerCase().includes(q)) ||
+        (a.office && a.office.toLowerCase().includes(q));
 
-  const filteredAssets = assets;
+      const matchesCat =
+        selectedCategoryFilter === '' || a.categoryId === selectedCategoryFilter;
+      const matchesStatus =
+        selectedStatusFilter === '' || a.status === selectedStatusFilter;
+      const matchesBrand =
+        selectedBrandFilter === '' || a.brandId === selectedBrandFilter;
 
-  // Paginación calculada
+      return matchesSearch && matchesCat && matchesStatus && matchesBrand;
+    });
+  }, [assets, searchQuery, selectedCategoryFilter, selectedStatusFilter, selectedBrandFilter]);
+
+  useEffect(() => {
+    setAssetsPage(1);
+  }, [searchQuery, selectedCategoryFilter, selectedStatusFilter, selectedBrandFilter]);
+
+  // Paginación calculada (debe declararse antes de cualquier return condicional)
   const paginatedAssets = React.useMemo(() => {
     const start = (assetsPage - 1) * assetsPageSize;
     return filteredAssets.slice(start, start + assetsPageSize);
@@ -408,18 +426,27 @@ export default function ItamPage() {
     return loans.slice(start, start + loansPageSize);
   }, [loans, loansPage, loansPageSize]);
 
+  if (isLoading || !currentUser) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
+        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm font-medium">Cargando Módulo Integral de Gestión de Activos TI (ITAM)...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
       {/* ========================================================================= */}
       {/* 1. CABECERA PRINCIPAL (HEADER)                                           */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-30 w-full bg-[#0f172a] dark:bg-slate-900 border-b border-blue-900/60 dark:border-slate-800 text-white shadow-md">
-        <div className="max-w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-30 w-full bg-[#0d4f2f] dark:bg-slate-900 border-b border-emerald-800 dark:border-slate-800 text-white shadow-md transition-colors duration-200">
+        <div className="max-w-full px-4 sm:px-6 lg:px-8 h-18 py-2.5 flex items-center justify-between">
           {/* Lado izquierdo: Botón menú lateral + Branding Municipal */}
           <div className="flex items-center space-x-3.5">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-blue-800/80 transition-colors"
+              className="p-1.5 rounded-lg text-emerald-100 hover:text-white hover:bg-emerald-800/80 transition-colors"
               title="Colapsar / expandir menú"
               aria-label="Alternar menú lateral"
             >
@@ -429,25 +456,25 @@ export default function ItamPage() {
             </button>
 
             <div
-              className="flex items-center space-x-3 cursor-pointer"
+              className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => setActiveTab('inventory')}
             >
               <Image
                 src="/images/logo-castilla.png"
-                alt="Escudo Castilla"
-                width={36}
-                height={48}
+                alt="Escudo Oficial del Distrito de Castilla"
+                width={40}
+                height={52}
                 priority
-                className="w-8 h-auto object-contain drop-shadow"
+                className="w-9 h-auto object-contain drop-shadow transition-transform duration-200 group-hover:scale-105"
               />
               <div className="flex flex-col">
-                <span className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-blue-400">
-                  Municipalidad Distrital de Castilla &bull; Oficina de Sistemas / TI
+                <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-emerald-200/90 dark:text-emerald-400">
+                  Municipalidad Distrital de Castilla
                 </span>
-                <span className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none flex items-center gap-2">
-                  <span>Gestión de Activos TI</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                    ITAM v1.0
+                <span className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight flex items-center gap-2">
+                  <span>SIGM <span className="font-light text-emerald-200">| Activos TI (ITAM)</span></span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    v1.0
                   </span>
                 </span>
               </div>
@@ -455,7 +482,7 @@ export default function ItamPage() {
           </div>
 
           {/* Lado derecho: Indicador, Accesos, Tema y Perfil */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {criticalSupplies.length > 0 && (
               <button
                 onClick={() => setActiveTab('supplies')}
@@ -481,7 +508,7 @@ export default function ItamPage() {
             {/* Acceso a Módulos */}
             <button
               onClick={() => router.push('/modulos')}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-900/60 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm border border-blue-700/50 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm border border-emerald-600/40 transition-all hover:-translate-y-0.5"
               title="Ir a la cuadrícula de subsistemas"
             >
               <span>🚀</span>
@@ -492,7 +519,7 @@ export default function ItamPage() {
             {canAccessModule(currentUser, 'central_dashboard') && (
               <button
                 onClick={() => router.push('/admin')}
-                className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold shadow-sm border border-slate-700 transition-all"
+                className="hidden lg:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-emerald-100 text-xs font-semibold shadow-sm border border-emerald-700/50 transition-all"
                 title="Ir al Dashboard Central de Administración"
               >
                 <span>⚙️</span>
@@ -503,16 +530,16 @@ export default function ItamPage() {
             {/* Selector de Tema */}
             <ThemeToggle />
 
-            {/* Perfil del Usuario Activo */}
-            <div className="flex items-center space-x-2 pl-2 border-l border-blue-900/60 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center font-bold text-white text-xs shadow-inner">
+            {/* Perfil del Usuario Activo Institucional */}
+            <div className="hidden md:flex items-center space-x-3 bg-emerald-900/60 dark:bg-slate-800/80 border border-emerald-700/50 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-xs">
+              <div className="w-7 h-7 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center font-bold text-white shadow-inner">
                 {(currentUser.fullName || currentUser.username || 'U').charAt(0).toUpperCase()}
               </div>
-              <div className="hidden lg:flex flex-col text-left text-xs">
+              <div className="flex flex-col text-left">
                 <span className="font-bold text-white leading-tight">
                   {currentUser.fullName || currentUser.username}
                 </span>
-                <span className="text-[10px] text-blue-300">{currentUser.role}</span>
+                <span className="text-[10px] text-emerald-300 font-medium">{currentUser.role}</span>
               </div>
             </div>
           </div>
@@ -526,7 +553,7 @@ export default function ItamPage() {
         <div
           className={`fixed top-20 right-6 z-50 p-4 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold flex items-center space-x-2 animate-bounce ${
             alert.type === 'success'
-              ? 'bg-blue-600 text-white border border-blue-500'
+              ? 'bg-emerald-600 text-white border border-emerald-500'
               : 'bg-rose-600 text-white border border-rose-500'
           }`}
         >
@@ -558,7 +585,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('inventory')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'inventory'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Inventario General de Activos (Padre-Hijo)"
@@ -567,7 +594,7 @@ export default function ItamPage() {
                   {!sidebarCollapsed && (
                     <div className="flex-1 flex items-center justify-between text-left">
                       <span>Inventario Activos</span>
-                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                         {assets.length}
                       </span>
                     </div>
@@ -579,7 +606,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('movements')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'movements'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Asignaciones, Traslados y Generación de Actas"
@@ -600,7 +627,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('maintenance')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'maintenance'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Órdenes de Trabajo de Mantenimiento Preventivo y Correctivo"
@@ -621,7 +648,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('supplies')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'supplies'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Control de Stock de Tóners, Cables de Red y Conectores"
@@ -648,7 +675,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('loans')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'loans'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Gestión de Cesión Temporal de Proyectores, Laptops y Parlantes"
@@ -662,7 +689,7 @@ export default function ItamPage() {
                           {delayedLoans.length} Demorados
                         </span>
                       ) : (
-                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-bold">
+                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-full font-bold">
                           {loans.length}
                         </span>
                       )}
@@ -675,7 +702,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('audits')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'audits'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Cierres Anuales, Snapshots y Conciliación Física de Inventario"
@@ -696,7 +723,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('software')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'software'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                   title="Software Institucional y Control de Licencias"
@@ -725,7 +752,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('categories')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'categories'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -745,7 +772,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('catalogs')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'catalogs'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -765,7 +792,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('metrics')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'metrics'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -778,7 +805,7 @@ export default function ItamPage() {
                   onClick={() => setActiveTab('qr_lookup')}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                     activeTab === 'qr_lookup'
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-r-4 border-blue-600'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-r-4 border-emerald-600'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -802,10 +829,10 @@ export default function ItamPage() {
               <div className="space-y-1">
                 <p className="font-semibold text-slate-700 dark:text-slate-300">SIGM &bull; MDC</p>
                 <p>Módulo de Gestión TI (ITAM)</p>
-                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono">SRS Oct 2026 &bull; Conforme</p>
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">SRS Oct 2026 &bull; Conforme</p>
               </div>
             ) : (
-              <div className="text-center font-bold text-blue-600">TI</div>
+              <div className="text-center font-bold text-emerald-600">TI</div>
             )}
           </div>
         </aside>
@@ -823,7 +850,7 @@ export default function ItamPage() {
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <span>Parque Tecnológico Institucional</span>
-                    <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
                       {assets.length} Activos
                     </span>
                   </h2>
@@ -837,7 +864,7 @@ export default function ItamPage() {
                       setAssetToEdit(null);
                       setIsAssetModalOpen(true);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
                   >
                     <span>+</span>
                     <span>Registrar Activo</span>
@@ -866,7 +893,7 @@ export default function ItamPage() {
                       ● Base de datos MDC
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
                     💻
                   </div>
                 </div>
@@ -929,7 +956,7 @@ export default function ItamPage() {
                     placeholder="Buscar por código (ej. MDC-TI-PC-0001), SBN, serie o custodio..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full text-xs pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full text-xs pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                   <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
                 </div>
@@ -1010,7 +1037,7 @@ export default function ItamPage() {
                             >
                               <td className="py-3 px-4">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-mono font-extrabold text-blue-600 dark:text-blue-400">
+                                  <span className="font-mono font-extrabold text-emerald-700 dark:text-emerald-400">
                                     {asset.computerCode}
                                   </span>
                                   {asset.isLoanable && (
@@ -1066,7 +1093,7 @@ export default function ItamPage() {
                                       setParentForChildModal(asset);
                                       setIsChildModalOpen(true);
                                     }}
-                                    className="text-[11px] text-slate-400 hover:text-blue-600 flex items-center gap-1"
+                                    className="text-[11px] text-slate-400 hover:text-emerald-600 flex items-center gap-1"
                                   >
                                     <span>+ Vincular Hijos</span>
                                   </button>
@@ -1108,7 +1135,7 @@ export default function ItamPage() {
                                     setSelectedAssetForDetail(asset);
                                     setIsDetailModalOpen(true);
                                   }}
-                                  className="px-2 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 rounded-lg transition-colors"
+                                  className="px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg transition-colors"
                                   title="Ver Ficha Técnica y QR"
                                 >
                                   📋 Ficha
@@ -1249,7 +1276,7 @@ export default function ItamPage() {
                       ) : (
                         paginatedMovements.map((mov) => (
                           <tr key={mov.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                            <td className="py-3 px-4 font-mono font-bold text-blue-600 dark:text-blue-400">
+                            <td className="py-3 px-4 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                               {mov.actaNumber}
                             </td>
                             <td className="py-3 px-4">
@@ -1284,7 +1311,7 @@ export default function ItamPage() {
                               <button
                                 type="button"
                                 onClick={() => openActaModal('TRANSFERENCIA', null, mov)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-100 transition-colors"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold hover:bg-emerald-100 transition-colors"
                               >
                                 <span>📄</span>
                                 <span>Ver Acta PDF</span>
@@ -1406,7 +1433,7 @@ export default function ItamPage() {
                                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-300'
                                   : ord.status === 'EN_PROCESO'
                                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-300'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border-blue-300'
+                                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300'
                               }`}>
                                 {ord.status.replace('_', ' ')}
                               </span>
@@ -1427,7 +1454,7 @@ export default function ItamPage() {
                               <button
                                 type="button"
                                 onClick={() => openActaModal('MANTENIMIENTO', null, null, ord)}
-                                className="px-2.5 py-1 text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 rounded-lg transition-colors"
+                                className="px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg transition-colors"
                               >
                                 📄 Hoja Servicio
                               </button>
@@ -1459,7 +1486,7 @@ export default function ItamPage() {
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <span>Stock de Insumos & Consumibles TI</span>
-                    <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
                       {supplies.length} Artículos
                     </span>
                   </h2>
@@ -1474,7 +1501,7 @@ export default function ItamPage() {
                     setSupplyToEdit(null);
                     setIsSupplyModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
                 >
                   <span>+</span>
                   <span>Nuevo Insumo</span>
@@ -1548,7 +1575,7 @@ export default function ItamPage() {
                             setSupplyToEdit(sup);
                             setIsSupplyModalOpen(true);
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 rounded-xl transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 rounded-xl transition-colors"
                         >
                           Ajustar Stock
                         </button>
@@ -1916,7 +1943,7 @@ export default function ItamPage() {
                     setCategoryToEdit(null);
                     setIsCategoryModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
                 >
                   <span>+</span>
                   <span>Nueva Categoría</span>
@@ -1943,7 +1970,7 @@ export default function ItamPage() {
                             <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
                               {cat.name}
                             </h4>
-                            <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                            <span className="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
                               Prefijo: MDC-TI-{cat.code}-XXXX
                             </span>
                           </div>
@@ -1993,7 +2020,7 @@ export default function ItamPage() {
                           setCategoryForSchema(cat);
                           setIsSchemaModalOpen(true);
                         }}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-xl transition-colors"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-xl transition-colors"
                       >
                         ⚙️ Configurar Parámetros
                       </button>
@@ -2046,7 +2073,7 @@ export default function ItamPage() {
                         setCatalogModalType('brand');
                         setIsBrandModelModalOpen(true);
                       }}
-                      className="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-xl shadow-sm hover:bg-blue-700"
+                      className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
                     >
                       + Nueva Marca
                     </button>
@@ -2092,7 +2119,7 @@ export default function ItamPage() {
                         setCatalogModalType('model');
                         setIsBrandModelModalOpen(true);
                       }}
-                      className="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-xl shadow-sm hover:bg-blue-700"
+                      className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
                     >
                       + Nuevo Modelo
                     </button>
@@ -2165,7 +2192,7 @@ export default function ItamPage() {
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Préstamos Retrasados</span>
-                  <div className={`text-3xl font-black mt-1 ${delayedLoans.length > 0 ? 'text-rose-600' : 'text-blue-600'}`}>
+                  <div className={`text-3xl font-black mt-1 ${delayedLoans.length > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                     {delayedLoans.length}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">Vencidos sin retorno</p>
@@ -2251,15 +2278,15 @@ export default function ItamPage() {
           {/* ===================================================================== */}
           {activeTab === 'qr_lookup' && (
             <div className="space-y-6 animate-fadeIn">
-              <div className="p-8 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-xl space-y-4">
+              <div className="p-8 rounded-2xl bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] text-white shadow-xl space-y-4">
                 <div className="max-w-2xl">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-300">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
                     Búsqueda Rápida de Ficha Técnica Patrimonial
                   </span>
                   <h3 className="text-2xl font-black mt-1">
                     Consulta Inmediata por Código Informático / Pistola QR
                   </h3>
-                  <p className="text-xs text-blue-200/80 mt-1">
+                  <p className="text-xs text-emerald-100/90 mt-1">
                     Escanee con un lector de código de barras / QR la etiqueta física adherida al activo, o ingrese manualmente el código informático correlativo (ej. MDC-TI-PC-0001, MDC-TI-MON-0002).
                   </p>
                 </div>
@@ -2270,11 +2297,11 @@ export default function ItamPage() {
                     placeholder="MDC-TI-PC-0001"
                     value={quickLookupCode}
                     onChange={(e) => setQuickLookupCode(e.target.value)}
-                    className="flex-1 text-xs font-mono font-bold px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-300/50 outline-none focus:ring-2 focus:ring-blue-400"
+                    className="flex-1 text-xs font-mono font-bold px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-emerald-200/50 outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 text-xs font-bold bg-blue-500 hover:bg-blue-600 text-white rounded-xl shadow-md transition-colors"
+                    className="px-6 py-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition-colors"
                   >
                     Consultar Ficha
                   </button>
@@ -2290,7 +2317,7 @@ export default function ItamPage() {
                   <div className="p-5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-base font-black text-blue-300">
+                        <span className="font-mono text-base font-black text-emerald-300">
                           {lookupResult.computerCode}
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
@@ -2300,7 +2327,7 @@ export default function ItamPage() {
                       <span className="text-sm font-bold text-white block mt-0.5">
                         {lookupResult.brandName} {lookupResult.modelName} ({lookupResult.categoryName})
                       </span>
-                      <span className="text-xs text-blue-200 block mt-0.5">
+                      <span className="text-xs text-emerald-200 block mt-0.5">
                         Oficina: {lookupResult.office || 'Almacén'} &bull; Custodio:{' '}
                         {lookupResult.assignedPersonName || 'Sin asignar'}
                       </span>
@@ -2312,7 +2339,7 @@ export default function ItamPage() {
                         setSelectedAssetForDetail(lookupResult);
                         setIsDetailModalOpen(true);
                       }}
-                      className="px-5 py-2.5 text-xs font-bold bg-white text-blue-900 rounded-xl hover:bg-blue-50 shadow-md self-start sm:self-auto"
+                      className="px-5 py-2.5 text-xs font-bold bg-white text-emerald-950 rounded-xl hover:bg-emerald-50 shadow-md self-start sm:self-auto"
                     >
                       Ver Ficha Completa & QR
                     </button>

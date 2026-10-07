@@ -83,7 +83,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
               {isBrand ? '🏷️' : '📦'}
             </div>
             <div>
@@ -191,7 +191,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
             type="button"
             disabled={isSubmitting}
             onClick={handleSubmit}
-            className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-colors disabled:opacity-50"
+            className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors disabled:opacity-50"
           >
             {isSubmitting ? 'Guardando...' : `Guardar ${isBrand ? 'Marca' : 'Modelo'}`}
           </button>

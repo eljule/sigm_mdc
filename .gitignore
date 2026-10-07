@@ -27,6 +27,7 @@ postgres_data/
 pgadmin_data/
 **/postgres_data/
 **/pgadmin_data/
+*.dump
 
 # Variables de entorno sensibles (nunca commitear .env reales)
 .env
