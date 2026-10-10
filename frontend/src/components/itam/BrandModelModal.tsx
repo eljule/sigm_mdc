@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AssetBrand, AssetCategory } from '../../types/itam';
+import React, { useState, useEffect } from 'react';
+import { AssetBrand, AssetCategory, AssetModel } from '../../types/itam';
 import { itamService } from '../../services/itam.service';
 
 interface BrandModelModalProps {
@@ -9,6 +9,7 @@ interface BrandModelModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaved: () => void;
+  itemToEdit?: AssetBrand | AssetModel | null;
 }
 
 export const BrandModelModal: React.FC<BrandModelModalProps> = ({
@@ -18,14 +19,41 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
   isOpen,
   onClose,
   onSaved,
+  itemToEdit,
 }) => {
   const isBrand = type === 'brand';
+  const isEditing = !!itemToEdit;
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [brandId, setBrandId] = useState(brands[0]?.id || '');
+  const [brandId, setBrandId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMsg(null);
+      if (itemToEdit) {
+        setName(itemToEdit.name || '');
+        setDescription(itemToEdit.description || '');
+        setIsActive(itemToEdit.isActive !== false);
+
+        if (!isBrand) {
+          const m = itemToEdit as AssetModel;
+          setBrandId(m.brandId || (brands[0]?.id || ''));
+          setCategoryId(m.categoryId || '');
+        }
+      } else {
+        setName('');
+        setDescription('');
+        setIsActive(true);
+        setBrandId(brands[0]?.id || '');
+        setCategoryId('');
+      }
+    }
+  }, [isOpen, itemToEdit, isBrand, brands]);
 
   if (!isOpen) return null;
 
@@ -46,28 +74,59 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
     setIsSubmitting(true);
     try {
       if (isBrand) {
-        const res = await itamService.createBrand({
-          name: name.trim(),
-          description: description.trim() || undefined,
-        });
-        if (res.success) {
-          onSaved();
-          onClose();
+        if (isEditing && itemToEdit) {
+          const res = await itamService.updateBrand(itemToEdit.id, {
+            name: name.trim(),
+            description: description.trim() || undefined,
+            isActive,
+          });
+          if (res.success) {
+            onSaved();
+            onClose();
+          } else {
+            setErrorMsg(res.error || 'Error al actualizar la marca');
+          }
         } else {
-          setErrorMsg(res.error || 'Error al guardar la marca');
+          const res = await itamService.createBrand({
+            name: name.trim(),
+            description: description.trim() || undefined,
+          });
+          if (res.success) {
+            onSaved();
+            onClose();
+          } else {
+            setErrorMsg(res.error || 'Error al guardar la marca');
+          }
         }
       } else {
-        const res = await itamService.createModel({
-          name: name.trim(),
-          brandId,
-          categoryId: categoryId || undefined,
-          description: description.trim() || undefined,
-        });
-        if (res.success) {
-          onSaved();
-          onClose();
+        // Model
+        if (isEditing && itemToEdit) {
+          const res = await itamService.updateModel(itemToEdit.id, {
+            name: name.trim(),
+            brandId,
+            categoryId: categoryId || undefined,
+            description: description.trim() || undefined,
+            isActive,
+          });
+          if (res.success) {
+            onSaved();
+            onClose();
+          } else {
+            setErrorMsg(res.error || 'Error al actualizar el modelo');
+          }
         } else {
-          setErrorMsg(res.error || 'Error al guardar el modelo');
+          const res = await itamService.createModel({
+            name: name.trim(),
+            brandId,
+            categoryId: categoryId || undefined,
+            description: description.trim() || undefined,
+          });
+          if (res.success) {
+            onSaved();
+            onClose();
+          } else {
+            setErrorMsg(res.error || 'Error al guardar el modelo');
+          }
         }
       }
     } catch (err: any) {
@@ -80,23 +139,27 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60">
+        {/* Header institucional */}
+        <div className="px-6 py-4 border-b border-emerald-800 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-[#0d4f2f] via-[#105d38] to-[#0a3d24] text-white">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 flex items-center justify-center font-bold text-lg shadow-inner">
               {isBrand ? '🏷️' : '📦'}
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                {isBrand ? 'Registrar Nueva Marca' : 'Registrar Nuevo Modelo'}
+              <h2 className="text-base font-bold text-white">
+                {isEditing
+                  ? `Editar ${isBrand ? 'Marca' : 'Modelo'}`
+                  : `Registrar ${isBrand ? 'Nueva Marca' : 'Nuevo Modelo'}`}
               </h2>
-              <p className="text-xs text-slate-500">Catálogos de Hardware y Software TI</p>
+              <p className="text-xs text-emerald-200/90">
+                {isEditing ? `Modificación en catálogo institucional` : 'Catálogos de Hardware y Software TI'}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
           >
             ✕
           </button>
@@ -119,7 +182,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
                 <select
                   value={brandId}
                   onChange={(e) => setBrandId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                 >
                   {brands.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -136,7 +199,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                 >
                   <option value="">-- General / Múltiples Categorías --</option>
                   {categories.map((c) => (
@@ -159,7 +222,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
               placeholder={isBrand ? 'Ej. Asus, Cisco, Canon' : 'Ej. Latitude 5420, LaserJet Pro'}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
           </div>
 
@@ -172,9 +235,27 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
               placeholder="Detalles sobre serie o características..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none"
+              className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
           </div>
+
+          {isEditing && (
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="isActiveCheck"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700"
+              />
+              <label
+                htmlFor="isActiveCheck"
+                className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none"
+              >
+                Estado Activo (disponible para asignación a activos)
+              </label>
+            </div>
+          )}
         </form>
 
         {/* Footer */}
@@ -182,7 +263,7 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
             Cancelar
           </button>
@@ -193,7 +274,11 @@ export const BrandModelModal: React.FC<BrandModelModalProps> = ({
             onClick={handleSubmit}
             className="px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-colors disabled:opacity-50"
           >
-            {isSubmitting ? 'Guardando...' : `Guardar ${isBrand ? 'Marca' : 'Modelo'}`}
+            {isSubmitting
+              ? 'Guardando...'
+              : isEditing
+              ? `Actualizar ${isBrand ? 'Marca' : 'Modelo'}`
+              : `Guardar ${isBrand ? 'Marca' : 'Modelo'}`}
           </button>
         </div>
       </div>

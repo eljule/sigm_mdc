@@ -1,9 +1,11 @@
 import React from 'react';
 import { Asset, AssetCategory } from '../../types/itam';
+import { itamService } from '../../services/itam.service';
 
 interface AssetDetailModalProps {
   asset: Asset;
   category?: AssetCategory;
+  categories?: AssetCategory[];
   isOpen: boolean;
   onClose: () => void;
   onEdit: (asset: Asset) => void;
@@ -15,6 +17,7 @@ interface AssetDetailModalProps {
 export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
   asset,
   category,
+  categories,
   isOpen,
   onClose,
   onEdit,
@@ -22,6 +25,77 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
   onGenerateActa,
   onMoveAsset,
 }) => {
+  const [loadedCategories, setLoadedCategories] = React.useState<AssetCategory[]>([]);
+
+  React.useEffect(() => {
+    if (isOpen && !category && (!categories || categories.length === 0) && asset?.categoryId) {
+      itamService
+        .getCategories()
+        .then((cats) => {
+          setLoadedCategories(cats);
+        })
+        .catch((err) => console.warn('[AssetDetailModal] Error cargando categorías:', err));
+    }
+  }, [isOpen, category, categories, asset?.categoryId]);
+
+  const effectiveCategory =
+    category ||
+    categories?.find((c) => c.id === asset.categoryId) ||
+    loadedCategories.find((c) => c.id === asset.categoryId);
+
+  // Ordenar especificaciones respetando estrictamente el orden del esquema dinámico configurado en la categoría
+  const orderedSpecs = React.useMemo(() => {
+    if (!asset.specifications || Object.keys(asset.specifications).length === 0) {
+      return [];
+    }
+
+    const schema = effectiveCategory?.customFieldsSchema || [];
+    const specs = asset.specifications;
+    const handledKeys = new Set<string>();
+    const result: Array<{
+      key: string;
+      label: string;
+      val: any;
+      unit?: string;
+      type?: string;
+    }> = [];
+
+    // 1. Campos definidos en el esquema según su orden exacto
+    schema.forEach((field) => {
+      let matchedKey: string | undefined = undefined;
+      if (field.key in specs) {
+        matchedKey = field.key;
+      } else {
+        const lowerFieldKey = field.key.toLowerCase();
+        matchedKey = Object.keys(specs).find((k) => k.toLowerCase() === lowerFieldKey);
+      }
+
+      if (matchedKey !== undefined) {
+        handledKeys.add(matchedKey);
+        result.push({
+          key: field.key,
+          label: field.label,
+          val: specs[matchedKey],
+          unit: field.unit,
+          type: field.type,
+        });
+      }
+    });
+
+    // 2. Especificaciones registradas adicionales que no estén en el esquema actual
+    Object.entries(specs).forEach(([key, val]) => {
+      if (!handledKeys.has(key)) {
+        result.push({
+          key,
+          label: key.replace(/_/g, ' ').toUpperCase(),
+          val,
+        });
+      }
+    });
+
+    return result;
+  }, [asset.specifications, effectiveCategory?.customFieldsSchema]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
@@ -58,8 +132,8 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
   )}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-3xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn print:p-0 print:bg-white print:static">
+      <div className="relative w-full max-w-3xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden print:shadow-none print:border-none print:w-full print:max-w-none print:max-h-none print:overflow-visible">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/80">
           <div className="flex items-center gap-3">
@@ -85,7 +159,7 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 print:hidden">
             <button
               type="button"
               onClick={handlePrint}
@@ -114,9 +188,19 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                 {asset.categoryName || 'Equipo Tecnológico'}
               </span>
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                {asset.brandName} {asset.modelName}
-              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {asset.brandName} {asset.modelName}
+                </h3>
+                {((asset.brandName && (asset.brandName.toUpperCase().includes('GENÉRICO') || asset.brandName.toUpperCase().includes('DETERMINAR') || asset.brandName.toUpperCase().includes('POR VERIFICAR'))) ||
+                  (asset.modelName && (asset.modelName.toUpperCase().includes('POR VERIFICAR') || asset.modelName.toUpperCase().includes('PENDIENTE'))) ||
+                  (asset.notes && (asset.notes.toUpperCase().includes('VERIFICACIÓN PENDIENTE') || asset.notes.toUpperCase().includes('POR VERIFICAR') || asset.notes.includes('⚠️')))) && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-xs">
+                    <span>⚠️</span>
+                    <span>Verificación Pendiente</span>
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                 <div>
                   <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Código Patrimonial SBN</span>
@@ -256,32 +340,50 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
           <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20 dark:bg-emerald-950/20 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                Especificaciones Técnicas Registradas ({asset.categoryName})
+                Especificaciones Técnicas Registradas ({effectiveCategory?.name || asset.categoryName || 'Equipo'})
               </h4>
               <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-semibold">
                 Esquema Dinámico
               </span>
             </div>
 
-            {asset.specifications && Object.keys(asset.specifications).length > 0 ? (
+            {orderedSpecs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {Object.entries(asset.specifications).map(([key, val]) => {
-                  const fieldDef = category?.customFieldsSchema?.find((f) => f.key === key);
-                  const label = fieldDef?.label || key.replace(/_/g, ' ').toUpperCase();
+                {orderedSpecs.map(({ key, label, val, unit }) => {
+                  const isArray = Array.isArray(val);
                   const displayValue =
-                    typeof val === 'boolean' ? (val ? 'Sí' : 'No') : String(val);
+                    typeof val === 'boolean' ? (val ? 'Sí' : 'No') : String(val ?? '');
 
                   return (
                     <div
                       key={key}
-                      className="p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col"
+                      className={`p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col ${
+                        isArray ? 'md:col-span-2' : ''
+                      }`}
                     >
                       <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium">
-                        {label} {fieldDef?.unit && `(${fieldDef.unit})`}
+                        {label} {unit && `(${unit})`}
                       </span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">
-                        {displayValue || '-'}
-                      </span>
+                      {isArray ? (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {val.length === 0 ? (
+                            <span className="text-slate-400 italic">Ningún elemento registrado</span>
+                          ) : (
+                            val.map((item: any, i: number) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold"
+                              >
+                                {String(item)}
+                              </span>
+                            ))
+                          )}
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                          {displayValue || '-'}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -294,20 +396,39 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
           </div>
 
           {/* Notas */}
-          {asset.notes && (
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-              <span className="text-[11px] text-slate-400 font-semibold uppercase block mb-1">
-                Observaciones y Notas
-              </span>
-              <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line">
-                {asset.notes}
-              </p>
-            </div>
-          )}
+          {asset.notes && (() => {
+            const isWarning = asset.notes.toUpperCase().includes('VERIFICACIÓN PENDIENTE') || asset.notes.includes('⚠️') || asset.notes.toUpperCase().includes('POR VERIFICAR');
+            return (
+              <div className={`p-4 rounded-xl border ${
+                isWarning
+                  ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/70 dark:bg-amber-950/30'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30'
+              }`}>
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+                  <span className={`text-[11px] font-bold uppercase flex items-center gap-1 ${
+                    isWarning ? 'text-amber-800 dark:text-amber-300' : 'text-slate-400'
+                  }`}>
+                    {isWarning && <span>⚠️</span>}
+                    Observaciones y Notas
+                  </span>
+                  {isWarning && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                      Auditoría / Verificación de Hardware Requerida
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs whitespace-pre-line ${
+                  isWarning ? 'text-amber-900 dark:text-amber-100 font-medium' : 'text-slate-700 dark:text-slate-300'
+                }`}>
+                  {asset.notes}
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 flex-wrap gap-2">
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 flex-wrap gap-2 print:hidden">
           <div className="flex items-center gap-2">
             <button
               type="button"

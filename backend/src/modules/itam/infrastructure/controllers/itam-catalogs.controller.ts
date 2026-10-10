@@ -21,7 +21,7 @@ import {
 } from '../../application/dtos/asset-catalogs.dto';
 import { ApiResponseDto } from '../../../../common/dto/api-response.dto';
 
-@Controller('api/v1/itam')
+@Controller(['api/v1/itam', 'api/v1/itam/catalogs'])
 export class ItamCatalogsController {
   constructor(private readonly manageCatalogsUseCase: ManageCatalogsUseCase) {}
 

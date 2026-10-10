@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Asset, AssetMovement, MaintenanceOrder, AssetLoan } from '@/types/itam';
+import { Asset, AssetMovement, MaintenanceOrder, AssetLoan, AssetCategory } from '@/types/itam';
+import { itamService } from '@/services/itam.service';
 
 export type ActaType = 'ASIGNACION' | 'TRANSFERENCIA' | 'MANTENIMIENTO' | 'PRESTAMO';
 
@@ -13,6 +14,8 @@ interface ActaDocumentModalProps {
   asset?: Asset | null;
   maintenance?: MaintenanceOrder | null;
   loan?: AssetLoan | null;
+  category?: AssetCategory;
+  categories?: AssetCategory[];
 }
 
 export const ActaDocumentModal: React.FC<ActaDocumentModalProps> = ({
@@ -23,8 +26,11 @@ export const ActaDocumentModal: React.FC<ActaDocumentModalProps> = ({
   asset,
   maintenance,
   loan,
+  category,
+  categories,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
+  const [loadedCategories, setLoadedCategories] = React.useState<AssetCategory[]>([]);
 
   if (!isOpen) return null;
 
@@ -60,7 +66,85 @@ export const ActaDocumentModal: React.FC<ActaDocumentModalProps> = ({
     return `MDC-TI-DOC-${new Date().getFullYear()}-0001`;
   };
 
-  const effectiveAsset = asset || movement?.asset || maintenance?.asset;
+  const effectiveAsset =
+    asset ||
+    movement?.asset ||
+    maintenance?.asset ||
+    (loan?.items && loan.items[0]?.asset);
+
+  React.useEffect(() => {
+    if (
+      isOpen &&
+      !category &&
+      (!categories || categories.length === 0) &&
+      effectiveAsset?.categoryId
+    ) {
+      itamService
+        .getCategories()
+        .then((cats) => {
+          setLoadedCategories(cats);
+        })
+        .catch((err) => console.warn('[ActaDocumentModal] Error cargando categorías:', err));
+    }
+  }, [isOpen, category, categories, effectiveAsset?.categoryId]);
+
+  const effectiveCategory =
+    category ||
+    categories?.find((c) => c.id === effectiveAsset?.categoryId) ||
+    loadedCategories.find((c) => c.id === effectiveAsset?.categoryId);
+
+  // Ordenar especificaciones respetando estrictamente el orden configurado en customFieldsSchema
+  const orderedSpecs = React.useMemo(() => {
+    if (!effectiveAsset?.specifications || Object.keys(effectiveAsset.specifications).length === 0) {
+      return [];
+    }
+
+    const schema = effectiveCategory?.customFieldsSchema || [];
+    const specs = effectiveAsset.specifications;
+    const handledKeys = new Set<string>();
+    const result: Array<{
+      key: string;
+      label: string;
+      val: any;
+      unit?: string;
+      type?: string;
+    }> = [];
+
+    // 1. Primero los campos según el orden exacto configurado en la categoría
+    schema.forEach((field) => {
+      let matchedKey: string | undefined = undefined;
+      if (field.key in specs) {
+        matchedKey = field.key;
+      } else {
+        const lowerFieldKey = field.key.toLowerCase();
+        matchedKey = Object.keys(specs).find((k) => k.toLowerCase() === lowerFieldKey);
+      }
+
+      if (matchedKey !== undefined) {
+        handledKeys.add(matchedKey);
+        result.push({
+          key: field.key,
+          label: field.label,
+          val: specs[matchedKey],
+          unit: field.unit,
+          type: field.type,
+        });
+      }
+    });
+
+    // 2. Especificaciones registradas adicionales que no estén en el esquema actual
+    Object.entries(specs).forEach(([key, val]) => {
+      if (!handledKeys.has(key)) {
+        result.push({
+          key,
+          label: key.replace(/_/g, ' ').toUpperCase(),
+          val,
+        });
+      }
+    });
+
+    return result;
+  }, [effectiveAsset?.specifications, effectiveCategory?.customFieldsSchema]);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 print:p-0 print:bg-white">
@@ -250,18 +334,58 @@ export const ActaDocumentModal: React.FC<ActaDocumentModalProps> = ({
               </table>
 
               {/* Dynamic specs if available */}
-              {effectiveAsset.specifications && Object.keys(effectiveAsset.specifications).length > 0 && (
+              {orderedSpecs.length > 0 && (
                 <div className="mt-3 p-3 bg-slate-50 rounded border border-slate-200">
-                  <p className="text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    Componentes Técnicos Internos (Parametrización Dinámica RF-03):
-                  </p>
-                  <div className="grid grid-cols-3 gap-2 text-[11px]">
-                    {Object.entries(effectiveAsset.specifications).map(([key, val]) => (
-                      <div key={key}>
-                        <span className="text-slate-500 capitalize">{key.replace(/_/g, ' ')}: </span>
-                        <span className="font-semibold text-slate-800">{String(val)}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] font-bold text-slate-700 uppercase">
+                      Componentes Técnicos Internos ({effectiveCategory?.name || effectiveAsset.categoryName || 'Parametrización Dinámica RF-03'}):
+                    </p>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {orderedSpecs.length} especificaciones
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
+                    {orderedSpecs.map(({ key, label, val, unit }) => {
+                      const isArray = Array.isArray(val);
+                      const isBoolean = typeof val === 'boolean';
+                      let displayVal = isBoolean ? (val ? 'Sí' : 'No') : String(val ?? '');
+                      if (unit && displayVal && !isArray && !displayVal.toLowerCase().includes(unit.toLowerCase())) {
+                        displayVal = `${displayVal} ${unit}`;
+                      }
+
+                      return (
+                        <div
+                          key={key}
+                          className={`p-2 rounded bg-white border border-slate-200 flex flex-col justify-start ${
+                            isArray ? 'col-span-2 md:col-span-3' : ''
+                          }`}
+                        >
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                            {label} {unit && (!displayVal || isArray) ? `(${unit})` : ''}
+                          </span>
+                          {isArray ? (
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {val.length === 0 ? (
+                                <span className="text-slate-400 italic text-[10px]">Ninguno</span>
+                              ) : (
+                                val.map((item: any, i: number) => (
+                                  <span
+                                    key={i}
+                                    className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300 text-[10px] font-semibold"
+                                  >
+                                    {String(item)}
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                          ) : (
+                            <span className="font-semibold text-slate-800 mt-0.5">
+                              {displayVal || '-'}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

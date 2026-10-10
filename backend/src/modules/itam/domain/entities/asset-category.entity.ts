@@ -1,7 +1,7 @@
 export interface CustomFieldDefinition {
   key: string; // ej. 'processor', 'ram_gb', 'screen_size'
   label: string; // ej. 'Procesador (CPU)', 'Memoria RAM', 'Tamaño en Pulgadas'
-  type: 'text' | 'number' | 'select' | 'boolean' | 'date';
+  type: 'text' | 'number' | 'select' | 'boolean' | 'date' | 'textarea' | 'tags' | 'list';
   required: boolean;
   placeholder?: string;
   defaultValue?: string | number | boolean;

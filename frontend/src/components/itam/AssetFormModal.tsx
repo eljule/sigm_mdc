@@ -210,7 +210,12 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
       selectedCategory.customFieldsSchema.forEach((field) => {
         if (field.required) {
           const val = specifications[field.key];
-          if (val === undefined || val === null || val === '') {
+          if (
+            val === undefined ||
+            val === null ||
+            val === '' ||
+            (Array.isArray(val) && val.length === 0)
+          ) {
             errors[field.key] = `El parámetro "${field.label}" es obligatorio para esta categoría`;
           }
         }
@@ -224,6 +229,23 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      // Organizar especificaciones según el orden del esquema de la categoría
+      const sortedSpecifications: Record<string, any> = {};
+      if (selectedCategory?.customFieldsSchema && selectedCategory.customFieldsSchema.length > 0) {
+        selectedCategory.customFieldsSchema.forEach((f) => {
+          if (f.key in specifications) {
+            sortedSpecifications[f.key] = specifications[f.key];
+          }
+        });
+        Object.entries(specifications).forEach(([k, v]) => {
+          if (!(k in sortedSpecifications)) {
+            sortedSpecifications[k] = v;
+          }
+        });
+      } else {
+        Object.assign(sortedSpecifications, specifications);
+      }
+
       if (isEditing && assetToEdit) {
         const payload: UpdateAssetPayload = {
           categoryId,
@@ -240,7 +262,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
           supplier: supplier.trim() || undefined,
           warrantyEndDate: warrantyEndDate || undefined,
           isLoanable,
-          specifications,
+          specifications: sortedSpecifications,
           notes: notes.trim() || undefined,
         };
 
@@ -267,7 +289,7 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
           supplier: supplier.trim() || undefined,
           warrantyEndDate: warrantyEndDate || undefined,
           isLoanable,
-          specifications,
+          specifications: sortedSpecifications,
           notes: notes.trim() || undefined,
         };
 
@@ -708,9 +730,36 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
 
           {/* Section 4: Observaciones */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Observaciones y Notas Adicionales
-            </label>
+            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Observaciones y Notas Adicionales
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const warningText = '[⚠️ VERIFICACIÓN PENDIENTE]: Marca y/o modelo no legibles a simple vista. Pendiente programar auditoría técnica de hardware o diagnóstico interno para confirmar placa base, serie real y fabricante.';
+                  if (!notes.trim()) {
+                    setNotes(warningText);
+                  } else if (!notes.includes('VERIFICACIÓN PENDIENTE')) {
+                    setNotes(`${warningText}\n${notes}`);
+                  }
+                  // Si no hay marca seleccionada o está vacía, preseleccionar la marca genérica
+                  const genericBrand = brands.find((b) => b.name.toUpperCase().includes('GENÉRICO') || b.name.toUpperCase().includes('DETERMINAR'));
+                  if (genericBrand && (!brandId || brandId === '')) {
+                    setBrandId(genericBrand.id);
+                    const genericModel = models.find((m) => m.brandId === genericBrand.id && (m.name.includes('VERIFICAR') || m.name.includes('PENDIENTE')));
+                    if (genericModel) {
+                      setModelId(genericModel.id);
+                    }
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-900/80 border border-amber-300 dark:border-amber-700 transition-colors shadow-xs"
+                title="Inserta nota de advertencia y preselecciona catálogo genérico si aplica"
+              >
+                <span>⚠️</span>
+                <span>Marcar para Verificación Posterior</span>
+              </button>
+            </div>
             <textarea
               rows={2}
               placeholder="Detalles sobre accesorios incluidos, estado del precinto de seguridad, etc."

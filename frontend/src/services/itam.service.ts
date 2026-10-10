@@ -158,6 +158,43 @@ export const itamService = {
     }
   },
 
+  async updateBrand(
+    id: string,
+    payload: { name?: string; description?: string; isActive?: boolean },
+  ): Promise<{ success: boolean; data?: AssetBrand; error?: string }> {
+    const baseUrl = getBaseUrl();
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/itam/catalogs/brands/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        return { success: true, data: json.data };
+      }
+      return { success: false, error: json.message || 'Error al actualizar marca' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
+    }
+  },
+
+  async deleteBrand(id: string): Promise<{ success: boolean; error?: string }> {
+    const baseUrl = getBaseUrl();
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/itam/catalogs/brands/${id}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        return { success: true };
+      }
+      return { success: false, error: json.message || 'Error al eliminar marca' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
+    }
+  },
+
   async getModels(brandId?: string, categoryId?: string): Promise<AssetModel[]> {
     const baseUrl = getBaseUrl();
     const query = new URLSearchParams();
@@ -196,6 +233,49 @@ export const itamService = {
         return { success: true, data: json.data };
       }
       return { success: false, error: json.message || 'Error al crear modelo' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
+    }
+  },
+
+  async updateModel(
+    id: string,
+    payload: {
+      name?: string;
+      brandId?: string;
+      categoryId?: string;
+      description?: string;
+      isActive?: boolean;
+    },
+  ): Promise<{ success: boolean; data?: AssetModel; error?: string }> {
+    const baseUrl = getBaseUrl();
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/itam/catalogs/models/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        return { success: true, data: json.data };
+      }
+      return { success: false, error: json.message || 'Error al actualizar modelo' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de red' };
+    }
+  },
+
+  async deleteModel(id: string): Promise<{ success: boolean; error?: string }> {
+    const baseUrl = getBaseUrl();
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/itam/catalogs/models/${id}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        return { success: true };
+      }
+      return { success: false, error: json.message || 'Error al eliminar modelo' };
     } catch (err: any) {
       return { success: false, error: err.message || 'Error de red' };
     }

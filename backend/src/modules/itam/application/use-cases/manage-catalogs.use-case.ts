@@ -50,13 +50,32 @@ export class ManageCatalogsUseCase {
 
   async updateBrand(id: string, dto: UpdateAssetBrandDto): Promise<AssetBrand> {
     const brand = await this.getBrandById(id);
+    if (dto.name && dto.name.trim().toLowerCase() !== brand.name.toLowerCase()) {
+      const existing = await this.brandRepo.findByName(dto.name);
+      if (existing && existing.id !== id) {
+        throw new ConflictException(`Ya existe otra marca con el nombre "${dto.name.trim()}"`);
+      }
+    }
     brand.update(dto.name, dto.description, dto.isActive);
     return this.brandRepo.save(brand);
   }
 
   async deleteBrand(id: string): Promise<boolean> {
     await this.getBrandById(id);
-    return this.brandRepo.delete(id);
+    try {
+      return await this.brandRepo.delete(id);
+    } catch (err: any) {
+      if (
+        err.code === '23503' ||
+        err.message?.includes('foreign key') ||
+        err.message?.includes('violates foreign key constraint')
+      ) {
+        throw new ConflictException(
+          'No se puede eliminar la marca porque tiene modelos o activos vinculados en el inventario. Puede desactivarla en su lugar.',
+        );
+      }
+      throw err;
+    }
   }
 
   // ===========================================================================
@@ -96,8 +115,20 @@ export class ManageCatalogsUseCase {
 
   async updateModel(id: string, dto: UpdateAssetModelDto): Promise<AssetModel> {
     const model = await this.getModelById(id);
+    const targetBrandId = dto.brandId || model.brandId;
     if (dto.brandId) {
       await this.getBrandById(dto.brandId);
+    }
+
+    if (
+      dto.name &&
+      (dto.name.trim().toLowerCase() !== model.name.toLowerCase() ||
+        (dto.brandId && dto.brandId !== model.brandId))
+    ) {
+      const existing = await this.modelRepo.findByNameAndBrand(dto.name, targetBrandId);
+      if (existing && existing.id !== id) {
+        throw new ConflictException('Ya existe un modelo con este nombre para la marca seleccionada');
+      }
     }
 
     model.update({
@@ -113,6 +144,19 @@ export class ManageCatalogsUseCase {
 
   async deleteModel(id: string): Promise<boolean> {
     await this.getModelById(id);
-    return this.modelRepo.delete(id);
+    try {
+      return await this.modelRepo.delete(id);
+    } catch (err: any) {
+      if (
+        err.code === '23503' ||
+        err.message?.includes('foreign key') ||
+        err.message?.includes('violates foreign key constraint')
+      ) {
+        throw new ConflictException(
+          'No se puede eliminar el modelo porque está asignado a uno o más activos en el inventario. Puede desactivarlo en su lugar.',
+        );
+      }
+      throw err;
+    }
   }
 }

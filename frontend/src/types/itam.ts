@@ -1,4 +1,4 @@
-export type FieldType = 'text' | 'number' | 'select' | 'boolean' | 'textarea';
+export type FieldType = 'text' | 'number' | 'select' | 'boolean' | 'textarea' | 'tags' | 'list';
 
 export interface CustomFieldDefinition {
   key: string;

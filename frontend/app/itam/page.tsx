@@ -113,6 +113,10 @@ export default function ItamPage() {
 
   const [isBrandModelModalOpen, setIsBrandModelModalOpen] = useState(false);
   const [catalogModalType, setCatalogModalType] = useState<'brand' | 'model'>('brand');
+  const [catalogItemToEdit, setCatalogItemToEdit] = useState<AssetBrand | AssetModel | null>(null);
+  const [brandSearch, setBrandSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
+  const [modelBrandFilter, setModelBrandFilter] = useState('');
 
   // Modales de Submódulos SRS
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
@@ -345,6 +349,60 @@ export default function ItamPage() {
     }
   };
 
+  // Mantenimiento de Marcas y Modelos (RF-01)
+  const handleOpenNewBrand = () => {
+    setCatalogModalType('brand');
+    setCatalogItemToEdit(null);
+    setIsBrandModelModalOpen(true);
+  };
+
+  const handleEditBrand = (brand: AssetBrand) => {
+    setCatalogModalType('brand');
+    setCatalogItemToEdit(brand);
+    setIsBrandModelModalOpen(true);
+  };
+
+  const handleDeleteBrand = async (brand: AssetBrand) => {
+    if (!window.confirm(`¿Está seguro de eliminar la marca "${brand.name}"?\nEsta acción es permanente.`)) {
+      return;
+    }
+    const res = await itamService.deleteBrand(brand.id);
+    if (res.success) {
+      showAlert(`Marca "${brand.name}" eliminada exitosamente.`);
+      const [b, m] = await Promise.all([itamService.getBrands(), itamService.getModels()]);
+      setBrands(b);
+      setModels(m);
+    } else {
+      showAlert(res.error || 'No se pudo eliminar la marca', 'error');
+    }
+  };
+
+  const handleOpenNewModel = () => {
+    setCatalogModalType('model');
+    setCatalogItemToEdit(null);
+    setIsBrandModelModalOpen(true);
+  };
+
+  const handleEditModel = (model: AssetModel) => {
+    setCatalogModalType('model');
+    setCatalogItemToEdit(model);
+    setIsBrandModelModalOpen(true);
+  };
+
+  const handleDeleteModel = async (model: AssetModel) => {
+    if (!window.confirm(`¿Está seguro de eliminar el modelo "${model.name}"?\nEsta acción es permanente.`)) {
+      return;
+    }
+    const res = await itamService.deleteModel(model.id);
+    if (res.success) {
+      showAlert(`Modelo "${model.name}" eliminado exitosamente.`);
+      const m = await itamService.getModels();
+      setModels(m);
+    } else {
+      showAlert(res.error || 'No se pudo eliminar el modelo', 'error');
+    }
+  };
+
   const handleQuickLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickLookupCode.trim()) return;
@@ -388,6 +446,7 @@ export default function ItamPage() {
         (a.assignedPersonName && a.assignedPersonName.toLowerCase().includes(q)) ||
         (a.brandName && a.brandName.toLowerCase().includes(q)) ||
         (a.modelName && a.modelName.toLowerCase().includes(q)) ||
+        (a.notes && a.notes.toLowerCase().includes(q)) ||
         (a.office && a.office.toLowerCase().includes(q));
 
       const matchesCat =
@@ -1063,9 +1122,22 @@ export default function ItamPage() {
                                     {cat?.icon || '💻'}
                                   </span>
                                   <div>
-                                    <span className="font-bold text-slate-900 dark:text-white block">
-                                      {asset.brandName} {asset.modelName}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-bold text-slate-900 dark:text-white">
+                                        {asset.brandName} {asset.modelName}
+                                      </span>
+                                      {((asset.brandName && (asset.brandName.toUpperCase().includes('GENÉRICO') || asset.brandName.toUpperCase().includes('DETERMINAR') || asset.brandName.toUpperCase().includes('POR VERIFICAR'))) ||
+                                        (asset.modelName && (asset.modelName.toUpperCase().includes('POR VERIFICAR') || asset.modelName.toUpperCase().includes('PENDIENTE'))) ||
+                                        (asset.notes && (asset.notes.toUpperCase().includes('VERIFICACIÓN PENDIENTE') || asset.notes.toUpperCase().includes('POR VERIFICAR') || asset.notes.includes('⚠️')))) && (
+                                        <span
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-xs"
+                                          title="Equipo con marca o modelo provisional. Requiere verificación técnica posterior."
+                                        >
+                                          <span>⚠️</span>
+                                          <span>Por Verificar</span>
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="text-[10px] text-slate-400">
                                       {asset.categoryName} • Serie: {asset.serialNumber || 'S/N'}
                                     </span>
@@ -2046,107 +2118,236 @@ export default function ItamPage() {
           {/* ===================================================================== */}
           {/* TAB 9: MARCAS Y MODELOS HOMOLOGADOS (RF-01)                           */}
           {/* ===================================================================== */}
-          {activeTab === 'catalogs' && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Catálogo Homologado de Marcas y Modelos
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Estandarización de fabricantes y líneas de productos para evitar redundancias y variaciones tipográficas (RF-01).
-                </p>
-              </div>
+          {activeTab === 'catalogs' && (() => {
+            const filteredBrands = brands.filter(
+              (b) =>
+                b.name.toLowerCase().includes(brandSearch.toLowerCase()) ||
+                (b.description && b.description.toLowerCase().includes(brandSearch.toLowerCase()))
+            );
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Columna de Marcas */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        🏷️ Marcas Fabricantes ({brands.length})
-                      </h3>
-                      <p className="text-[11px] text-slate-500">Fabricantes de equipamiento</p>
-                    </div>
+            const filteredModels = models.filter((m) => {
+              const matchesBrand = modelBrandFilter ? m.brandId === modelBrandFilter : true;
+              const matchesSearch =
+                m.name.toLowerCase().includes(modelSearch.toLowerCase()) ||
+                (m.brandName && m.brandName.toLowerCase().includes(modelSearch.toLowerCase())) ||
+                (m.categoryName && m.categoryName.toLowerCase().includes(modelSearch.toLowerCase())) ||
+                (m.description && m.description.toLowerCase().includes(modelSearch.toLowerCase()));
+              return matchesBrand && matchesSearch;
+            });
+
+            return (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                      Catálogo Homologado de Marcas y Modelos
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Estandarización de fabricantes y líneas de productos para evitar redundancias y variaciones tipográficas (RF-01).
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setCatalogModalType('brand');
-                        setIsBrandModelModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+                      onClick={handleOpenNewBrand}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm transition-colors"
                     >
                       + Nueva Marca
                     </button>
-                  </div>
-
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {brands.map((b) => {
-                      const modelsCount = models.filter((m) => m.brandId === b.id).length;
-                      return (
-                        <div
-                          key={b.id}
-                          className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 px-2 rounded-lg transition-colors"
-                        >
-                          <div>
-                            <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                              {b.name}
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                              {modelsCount} modelo{modelsCount !== 1 ? 's' : ''} registrado{modelsCount !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
-                            Activo
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Columna de Modelos */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        📦 Modelos y Líneas ({models.length})
-                      </h3>
-                      <p className="text-[11px] text-slate-500">Líneas de producto homologadas</p>
-                    </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        setCatalogModalType('model');
-                        setIsBrandModelModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+                      onClick={handleOpenNewModel}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-sm transition-colors"
                     >
                       + Nuevo Modelo
                     </button>
                   </div>
+                </div>
 
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto pr-1">
-                    {models.map((m) => (
-                      <div
-                        key={m.id}
-                        className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 px-2 rounded-lg transition-colors"
-                      >
-                        <div>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                            {m.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            Marca: <strong className="text-slate-600 dark:text-slate-300">{m.brandName}</strong>{' '}
-                            {m.categoryName && `• Categoría: ${m.categoryName}`}
-                          </span>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Columna de Marcas */}
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          🏷️ Marcas Fabricantes ({brands.length})
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Fabricantes de equipamiento</p>
                       </div>
-                    ))}
+                      <button
+                        type="button"
+                        onClick={handleOpenNewBrand}
+                        className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+                      >
+                        + Nueva Marca
+                      </button>
+                    </div>
+
+                    {/* Buscador de Marcas */}
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Buscar marca..."
+                        value={brandSearch}
+                        onChange={(e) => setBrandSearch(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto pr-1">
+                      {filteredBrands.length === 0 ? (
+                        <p className="text-center py-6 text-xs text-slate-400">No se encontraron marcas</p>
+                      ) : (
+                        filteredBrands.map((b) => {
+                          const modelsCount = models.filter((m) => m.brandId === b.id).length;
+                          return (
+                            <div
+                              key={b.id}
+                              className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 px-2 rounded-lg transition-colors group"
+                            >
+                              <div className="flex-1 pr-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                    {b.name}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                                      b.isActive !== false
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                    }`}
+                                  >
+                                    {b.isActive !== false ? 'Activo' : 'Inactivo'}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 block mt-0.5">
+                                  {modelsCount} modelo{modelsCount !== 1 ? 's' : ''} registrado{modelsCount !== 1 ? 's' : ''}
+                                  {b.description && ` • ${b.description}`}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditBrand(b)}
+                                  title="Editar Marca"
+                                  className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteBrand(b)}
+                                  title="Eliminar Marca"
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Columna de Modelos */}
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          📦 Modelos y Líneas ({models.length})
+                        </h3>
+                        <p className="text-[11px] text-slate-500">Líneas de producto homologadas</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenNewModel}
+                        className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+                      >
+                        + Nuevo Modelo
+                      </button>
+                    </div>
+
+                    {/* Filtros de Modelos */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Buscar modelo..."
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                      <select
+                        value={modelBrandFilter}
+                        onChange={(e) => setModelBrandFilter(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      >
+                        <option value="">Todas las marcas</option>
+                        {brands.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto pr-1">
+                      {filteredModels.length === 0 ? (
+                        <p className="text-center py-6 text-xs text-slate-400">No se encontraron modelos</p>
+                      ) : (
+                        filteredModels.map((m) => (
+                          <div
+                            key={m.id}
+                            className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 px-2 rounded-lg transition-colors group"
+                          >
+                            <div className="flex-1 pr-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                  {m.name}
+                                </span>
+                                <span
+                                  className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                                    m.isActive !== false
+                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                  }`}
+                                >
+                                  {m.isActive !== false ? 'Activo' : 'Inactivo'}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 block mt-0.5">
+                                Marca: <strong className="text-slate-600 dark:text-slate-300">{m.brandName}</strong>
+                                {m.categoryName && ` • Categoría: ${m.categoryName}`}
+                                {m.description && ` • ${m.description}`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleEditModel(m)}
+                                title="Editar Modelo"
+                                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteModel(m)}
+                                title="Eliminar Modelo"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ===================================================================== */}
           {/* TAB 10: DASHBOARD EJECUTIVO KPIS (Mejora 2)                           */}
@@ -2414,6 +2615,7 @@ export default function ItamPage() {
         <AssetDetailModal
           asset={selectedAssetForDetail}
           category={categories.find((c) => c.id === selectedAssetForDetail.categoryId)}
+          categories={categories}
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
           onEdit={(asset) => {
@@ -2432,19 +2634,28 @@ export default function ItamPage() {
         />
       )}
 
-      {/* MODAL 5: REGISTRO DE MARCA O MODELO */}
+      {/* MODAL 5: REGISTRO Y EDICIÓN DE MARCA O MODELO */}
       {isBrandModelModalOpen && (
         <BrandModelModal
           type={catalogModalType}
           brands={brands}
           categories={categories}
+          itemToEdit={catalogItemToEdit}
           isOpen={isBrandModelModalOpen}
-          onClose={() => setIsBrandModelModalOpen(false)}
+          onClose={() => {
+            setIsBrandModelModalOpen(false);
+            setCatalogItemToEdit(null);
+          }}
           onSaved={async () => {
-            showAlert(`Catálogo de marcas y modelos actualizado`);
+            showAlert(
+              catalogItemToEdit
+                ? `${catalogModalType === 'brand' ? 'Marca' : 'Modelo'} actualizado exitosamente`
+                : `${catalogModalType === 'brand' ? 'Marca' : 'Modelo'} registrado exitosamente`
+            );
             const [b, m] = await Promise.all([itamService.getBrands(), itamService.getModels()]);
             setBrands(b);
             setModels(m);
+            setCatalogItemToEdit(null);
           }}
         />
       )}
@@ -2556,6 +2767,7 @@ export default function ItamPage() {
           movement={actaMovement}
           maintenance={actaMaintenance}
           loan={actaLoan}
+          categories={categories}
         />
       )}
     </div>
